@@ -1,15 +1,37 @@
 import { EarthIcon, ImageIcon } from 'lucide-react';
+import { FormEvent, useState } from 'react';
+import { trpc } from '~/utils/trpc';
 
 export default function TweetInputBox() {
+  const [body, setBody] = useState('');
+
+  const utils = trpc.useUtils();
+  const tweetMutation = trpc.tweet.create.useMutation({
+    onSuccess: () => {
+      utils.tweet.showAll.invalidate();
+    },
+  });
+
+  function onSubmitTweet(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (body.length < 1) return;
+    tweetMutation.mutate({
+      body,
+    });
+  }
+
   return (
-    <div className="bg-white rounded-xl px-5 py-3">
+    <div className="bg-white rounded-xl px-5 py-3 mb-5 shadow">
       <h3 className="font-semibold text-xs">Tweet something</h3>
       <hr className="my-2" />
       <div className="flex space-x-3">
         <div className="w-10 h-10 bg-blue-200 rounded-lg" />
 
-        <div className="flex-1">
+        <form className="flex-1" onSubmit={onSubmitTweet}>
           <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            maxLength={255}
             className="w-full py-2 focus:outline-none"
             placeholder="What's happening?"
           />
@@ -21,11 +43,15 @@ export default function TweetInputBox() {
               <EarthIcon size={20} />
               <p>Everyone can reply</p>
             </button>
-            <button className="bg-blue-500 rounded text-white font-medium text-xs py-2 px-6 ml-auto">
+            <button
+              type="submit"
+              disabled={body.length < 1}
+              className="bg-blue-500 rounded text-white font-medium text-xs py-2 px-6 ml-auto disabled:bg-blue-400 disabled:cursor-not-allowed"
+            >
               Tweet
             </button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );

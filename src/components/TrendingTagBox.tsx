@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function TrendingTagBox() {
   return (
-    <div className="bg-white py-2.5 px-5 rounded-xl mb-5">
+    <div className="bg-white py-2.5 px-5 rounded-xl mb-5 shadow">
       <h3 className="font-semibold text-xs text-gray-700 mb-2">
         Trends for you
       </h3>

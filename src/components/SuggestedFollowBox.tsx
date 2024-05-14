@@ -3,7 +3,7 @@ import React from 'react';
 
 export default function SuggestedFollowBox() {
   return (
-    <div className="bg-white py-2.5 px-5 rounded-xl">
+    <div className="bg-white py-2.5 px-5 rounded-xl shadow">
       <h3 className="font-semibold text-xs text-gray-700 mb-2">
         Who to follow
       </h3>
