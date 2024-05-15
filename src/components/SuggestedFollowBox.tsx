@@ -1,5 +1,4 @@
-import { UserPlusIcon } from 'lucide-react';
-import React from 'react';
+import FollowButton from './FollowButton';
 
 export default function SuggestedFollowBox() {
   return (
@@ -26,10 +25,7 @@ function SuggestedFollowItem(props: { name: string; followersCount: number }) {
             {props.followersCount} followers
           </p>
         </div>
-        <button className="flex bg-blue-500 text-white text-xs font-medium ml-auto rounded py-1 px-3 space-x-1">
-          <UserPlusIcon size={14} />
-          <span>Follow</span>
-        </button>
+        <FollowButton />
       </div>
     </li>
   );

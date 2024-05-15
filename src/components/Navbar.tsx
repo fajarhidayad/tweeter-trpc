@@ -6,12 +6,12 @@ import classNames from 'classnames';
 export default function Navbar() {
   return (
     <nav className="bg-white shadow">
-      <div className="container max-w-7xl flex justify-between items-center">
+      <div className="container py-6 lg:py-0 max-w-7xl flex justify-between items-center">
         <Link href={'/'} className="font-semibold text-lg">
           Tweeter
         </Link>
 
-        <ul className="flex items-center space-x-14 pt-6">
+        <ul className="hidden lg:flex items-center space-x-14 pt-6">
           <NavLink href="/">Home</NavLink>
           <NavLink href="/explore">Explore</NavLink>
           <NavLink href="/bookmark">Bookmarks</NavLink>

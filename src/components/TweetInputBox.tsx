@@ -9,6 +9,7 @@ export default function TweetInputBox() {
   const tweetMutation = trpc.tweet.create.useMutation({
     onSuccess: () => {
       utils.tweet.showAll.invalidate();
+      setBody('');
     },
   });
 
@@ -45,7 +46,7 @@ export default function TweetInputBox() {
             </button>
             <button
               type="submit"
-              disabled={body.length < 1}
+              disabled={body.length < 1 || tweetMutation.isPending}
               className="bg-blue-500 rounded text-white font-medium text-xs py-2 px-6 ml-auto disabled:bg-blue-400 disabled:cursor-not-allowed"
             >
               Tweet
