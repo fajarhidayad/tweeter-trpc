@@ -8,6 +8,7 @@ import {
 import { TweetBox, TweetContainer } from '~/components/TweetBox';
 import Grid from '~/components/layouts/Grid';
 import Main from '~/components/layouts/Main';
+import StickyTopContainer from '~/components/layouts/StickyTopContainer';
 
 export default function ExplorePage() {
   return (
@@ -17,14 +18,14 @@ export default function ExplorePage() {
       </Head>
 
       <Grid>
-        <section className="col-span-1">
+        <StickyTopContainer>
           <FilterTweetContainer>
             <FilterTweetLink isActive={true}>Top</FilterTweetLink>
             <FilterTweetLink>Latest</FilterTweetLink>
             <FilterTweetLink>People</FilterTweetLink>
             <FilterTweetLink>Media</FilterTweetLink>
           </FilterTweetContainer>
-        </section>
+        </StickyTopContainer>
 
         <section className="col-span-2">
           <SearchTweetInput />

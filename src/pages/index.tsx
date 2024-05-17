@@ -5,6 +5,7 @@ import { TweetBox, TweetContainer } from '~/components/TweetBox';
 import TweetInputBox from '~/components/TweetInputBox';
 import Grid from '~/components/layouts/Grid';
 import Main from '~/components/layouts/Main';
+import StickyTopContainer from '~/components/layouts/StickyTopContainer';
 import { trpc } from '~/utils/trpc';
 
 export default function Home() {
@@ -16,7 +17,7 @@ export default function Home() {
         <title>Tweeter</title>
       </Head>
 
-      <Grid>
+      <Grid className="relative">
         <section className="col-span-1 lg:col-span-2">
           <TweetInputBox />
           {tweets.data && (
@@ -28,10 +29,10 @@ export default function Home() {
           )}
         </section>
 
-        <section className="hidden lg:block lg:col-span-1">
+        <StickyTopContainer className="hidden lg:block lg:col-span-1">
           <TrendingTagBox />
           <SuggestedFollowBox />
-        </section>
+        </StickyTopContainer>
       </Grid>
     </Main>
   );

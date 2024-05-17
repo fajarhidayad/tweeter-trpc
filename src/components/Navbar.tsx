@@ -2,8 +2,23 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { ReactNode } from 'react';
 import classNames from 'classnames';
+import { Popover, PopoverTrigger, PopoverContent } from './ui/popover';
+import {
+  ChevronDownIcon,
+  CircleUserIcon,
+  LogOutIcon,
+  SettingsIcon,
+} from 'lucide-react';
+import { Separator } from './ui/separator';
+import { twMerge } from 'tailwind-merge';
+import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
+import { signIn, signOut, useSession } from 'next-auth/react';
+import Image from 'next/image';
+import Avatar from './Avatar';
 
 export default function Navbar() {
+  const session = useSession();
+
   return (
     <nav className="bg-white shadow">
       <div className="container py-6 lg:py-0 max-w-7xl flex justify-between items-center">
@@ -17,9 +32,15 @@ export default function Navbar() {
           <NavLink href="/bookmark">Bookmarks</NavLink>
         </ul>
 
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 rounded bg-gray-200"></div>
-          <p className="font-semibold">User Name</p>
+        <div>
+          {session.data ? (
+            <AccountPopover
+              accountName={session.data.user.name as string}
+              image={session.data.user.image as string}
+            />
+          ) : (
+            <SignInDialog />
+          )}
         </div>
       </div>
     </nav>
@@ -51,5 +72,71 @@ function NavLink(props: { children: ReactNode; href: string }) {
         })}
       />
     </li>
+  );
+}
+
+function PopoverLink(props: {
+  children: ReactNode;
+  href: string;
+  onClick?: () => void;
+  className?: string;
+}) {
+  return (
+    <Link
+      href={props.href}
+      onClick={props.onClick}
+      className={twMerge(
+        'flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 font-medium text-sm text-gray-700',
+        props.className
+      )}
+    >
+      {props.children}
+    </Link>
+  );
+}
+
+function AccountPopover(props: { accountName: string; image: string }) {
+  return (
+    <Popover>
+      <PopoverTrigger className="flex items-center space-x-3">
+        <Avatar image={props.image} alt={props.accountName} />
+        <p className="font-semibold">{props.accountName}</p>
+        <ChevronDownIcon size={20} />
+      </PopoverTrigger>
+      <PopoverContent className="bg-white flex flex-col shadow rounded-xl w-[192px] px-3 py-4 right-0">
+        <PopoverLink href="/user">
+          <CircleUserIcon size={20} className="mr-2.5" />
+          My Profile
+        </PopoverLink>
+        <PopoverLink href="/settings">
+          <SettingsIcon size={20} className="mr-2.5" />
+          Settings
+        </PopoverLink>
+        <Separator className="my-2" />
+        <PopoverLink onClick={() => signOut()} href="" className="text-red-500">
+          <LogOutIcon size={20} className="mr-2.5" />
+          Logout
+        </PopoverLink>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function SignInDialog() {
+  return (
+    <Dialog>
+      <DialogTrigger className="bg-blue-500 text-white rounded px-6 py-2 text-sm font-semibold">
+        Sign in
+      </DialogTrigger>
+      <DialogContent>
+        <h2 className="text-xl font-semibold text-gray-700 mb-5">Sign in</h2>
+        <button
+          onClick={() => signIn('google')}
+          className="bg-blue-500 text-white text-lg font-medium py-3 rounded-lg"
+        >
+          Sign in with Google
+        </button>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -7,6 +7,7 @@ import {
 import { TweetBox, TweetContainer } from '~/components/TweetBox';
 import Grid from '~/components/layouts/Grid';
 import Main from '~/components/layouts/Main';
+import StickyTopContainer from '~/components/layouts/StickyTopContainer';
 
 export default function BookmarkPage() {
   return (
@@ -16,14 +17,15 @@ export default function BookmarkPage() {
       </Head>
 
       <Grid>
-        <section className="col-span-1">
+        <StickyTopContainer>
           <FilterTweetContainer>
             <FilterTweetLink isActive>Tweets</FilterTweetLink>
             <FilterTweetLink>Tweets & replies</FilterTweetLink>
             <FilterTweetLink>Media</FilterTweetLink>
             <FilterTweetLink>Likes</FilterTweetLink>
           </FilterTweetContainer>
-        </section>
+        </StickyTopContainer>
+
         <section className="col-span-2">
           <TweetContainer>
             <TweetBox body="bookmark" />

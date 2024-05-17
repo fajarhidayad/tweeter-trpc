@@ -1,9 +1,12 @@
 import { EarthIcon, ImageIcon } from 'lucide-react';
+import { useSession } from 'next-auth/react';
+import Image from 'next/image';
 import { FormEvent, useState } from 'react';
 import { trpc } from '~/utils/trpc';
 
 export default function TweetInputBox() {
   const [body, setBody] = useState('');
+  const session = useSession();
 
   const utils = trpc.useUtils();
   const tweetMutation = trpc.tweet.create.useMutation({
@@ -22,11 +25,20 @@ export default function TweetInputBox() {
   }
 
   return (
-    <div className="bg-white rounded-xl px-5 py-3 mb-5 shadow">
+    <div className="bg-white rounded-xl px-3 md:px-5 py-3 mb-5 shadow">
       <h3 className="font-semibold text-xs">Tweet something</h3>
       <hr className="my-2" />
       <div className="flex space-x-3">
-        <div className="w-10 h-10 bg-blue-200 rounded-lg" />
+        <div className="w-10 h-10 bg-blue-200 rounded-lg overflow-hidden">
+          {session.data && (
+            <Image
+              src={session.data.user.image as string}
+              alt={session.data.user.name as string}
+              width={40}
+              height={40}
+            />
+          )}
+        </div>
 
         <form className="flex-1" onSubmit={onSubmitTweet}>
           <textarea

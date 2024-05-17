@@ -4,6 +4,7 @@ import { tweetRouter } from './tweet';
 
 export const appRouter = router({
   helloworld: procedure.query((opts) => {
+    console.log(opts.ctx);
     return {
       message: 'hello world',
     };

@@ -1,18 +1,13 @@
 import React, { ReactNode } from 'react';
 import { twMerge } from 'tailwind-merge';
 
-export default function Grid(props: {
+export default function StickyTopContainer(props: {
   children: ReactNode;
   className?: string;
 }) {
   return (
-    <div
-      className={twMerge(
-        'grid grid-cols-1 lg:grid-cols-3 gap-x-6',
-        props.className
-      )}
-    >
+    <section className={twMerge('sticky top-5 self-start', props.className)}>
       {props.children}
-    </div>
+    </section>
   );
 }
