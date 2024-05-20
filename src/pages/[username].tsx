@@ -103,6 +103,7 @@ function UserDescriptionContainer() {
             Lorem ipsum dolor sit, amet consectetur adipisicing elit. Inventore,
             amet.
           </p>
+          <FollowButton className="flex md:hidden px-6 py-2 mx-auto mt-5" />
         </div>
       </div>
     </section>

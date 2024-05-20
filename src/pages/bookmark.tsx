@@ -1,3 +1,4 @@
+import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import Head from 'next/head';
 import React from 'react';
 import {
@@ -8,8 +9,25 @@ import { TweetBox, TweetContainer } from '~/components/TweetBox';
 import Grid from '~/components/layouts/Grid';
 import Main from '~/components/layouts/Main';
 import StickyTopContainer from '~/components/layouts/StickyTopContainer';
+import { UserServerSessionProps } from '../../types/user-session';
+import { auth } from '~/server/auth';
 
-export default function BookmarkPage() {
+export const getServerSideProps = (async ({ req, res }) => {
+  const session = await auth({ req, res });
+  if (!session) {
+    return {
+      redirect: {
+        destination: '/',
+        permanent: false,
+      },
+    };
+  }
+  return { props: { user: session.user } };
+}) satisfies GetServerSideProps<{ user: UserServerSessionProps }>;
+
+export default function BookmarkPage({
+  user,
+}: InferGetServerSidePropsType<typeof getServerSideProps>) {
   return (
     <Main>
       <Head>
@@ -28,7 +46,7 @@ export default function BookmarkPage() {
 
         <section className="col-span-2">
           <TweetContainer>
-            <TweetBox body="bookmark" />
+            <></>
           </TweetContainer>
         </section>
       </Grid>

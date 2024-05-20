@@ -8,18 +8,30 @@ import {
 import { ReactNode } from 'react';
 import Avatar from './Avatar';
 import { useSession } from 'next-auth/react';
+import Image from 'next/image';
 
 export function TweetContainer(props: { children: ReactNode }) {
   return <ul className="space-y-4">{props.children}</ul>;
 }
 
-export function TweetBox(props: { body: string }) {
+export function TweetBox(props: {
+  body: string;
+  authorName: string;
+  authorImg: string;
+}) {
   return (
     <li className="bg-white rounded-lg shadow p-5">
       <div className="flex mb-3.5">
-        <div className="w-10 h-10 bg-blue-300 rounded-lg mr-4" />
+        <div className="w-10 h-10 bg-blue-300 rounded-lg mr-4 overflow-hidden">
+          <Image
+            src={props.authorImg}
+            alt={props.authorName}
+            width={40}
+            height={40}
+          />
+        </div>
         <div className="font-medium">
-          <p>Peyton Lyons</p>
+          <p>{props.authorName}</p>
           <p className="text-xs text-gray-400 mt-1">24 August at 20:43</p>
         </div>
       </div>

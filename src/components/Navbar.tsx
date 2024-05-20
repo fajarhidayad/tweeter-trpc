@@ -23,13 +23,13 @@ export default function Navbar() {
     <nav className="bg-white shadow">
       <div className="container py-6 lg:py-0 max-w-7xl flex justify-between items-center">
         <Link href={'/'} className="font-semibold text-lg">
-          Tweeter
+          <Image src={'/tweeter.svg'} alt="icon" width={125} height={50} />
         </Link>
 
         <ul className="hidden lg:flex items-center space-x-14 pt-6">
           <NavLink href="/">Home</NavLink>
           <NavLink href="/explore">Explore</NavLink>
-          <NavLink href="/bookmark">Bookmarks</NavLink>
+          {session.data && <NavLink href="/bookmark">Bookmarks</NavLink>}
         </ul>
 
         <div>

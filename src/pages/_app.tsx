@@ -5,6 +5,7 @@ import { Poppins } from 'next/font/google';
 import Navbar from '~/components/Navbar';
 import { SessionProvider } from 'next-auth/react';
 import { type Session } from 'next-auth';
+import Auth from '~/components/layouts/Auth';
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -17,10 +18,12 @@ const App: AppType<{ session: Session | null }> = ({
 }) => {
   return (
     <SessionProvider session={session}>
-      <main className={poppins.className + ' bg-gray-100 min-h-screen'}>
-        <Navbar />
-        <Component {...pageProps} />
-      </main>
+      <Auth>
+        <main className={poppins.className + ' bg-gray-100 min-h-screen'}>
+          <Navbar />
+          <Component {...pageProps} />
+        </main>
+      </Auth>
     </SessionProvider>
   );
 };

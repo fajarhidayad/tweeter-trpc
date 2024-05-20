@@ -1,4 +1,6 @@
 import { SearchIcon } from 'lucide-react';
+import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
+import { Session } from 'next-auth';
 import Head from 'next/head';
 import React, { useState } from 'react';
 import {
@@ -9,8 +11,20 @@ import { TweetBox, TweetContainer } from '~/components/TweetBox';
 import Grid from '~/components/layouts/Grid';
 import Main from '~/components/layouts/Main';
 import StickyTopContainer from '~/components/layouts/StickyTopContainer';
+import { auth } from '~/server/auth';
+import { UserServerSessionProps } from '../../types/user-session';
+import { trpc } from '~/utils/trpc';
 
-export default function ExplorePage() {
+export const getServerSideProps = (async ({ req, res }) => {
+  const session = await auth({ req, res });
+  return { props: { user: session?.user ?? null } };
+}) satisfies GetServerSideProps<{ user: UserServerSessionProps }>;
+
+export default function ExplorePage({
+  user,
+}: InferGetServerSidePropsType<typeof getServerSideProps>) {
+  const tweets = trpc.tweet.showAll.useQuery();
+
   return (
     <Main>
       <Head>
@@ -30,7 +44,15 @@ export default function ExplorePage() {
         <section className="col-span-2">
           <SearchTweetInput />
           <TweetContainer>
-            <TweetBox body="coba" />
+            {tweets.data &&
+              tweets.data.map((tweet) => (
+                <TweetBox
+                  key={tweet.id}
+                  body={tweet.body}
+                  authorImg={tweet.author.image!}
+                  authorName={tweet.author.name!}
+                />
+              ))}
           </TweetContainer>
         </section>
       </Grid>

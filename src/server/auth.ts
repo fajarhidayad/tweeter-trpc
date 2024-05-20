@@ -1,17 +1,13 @@
 import { PrismaAdapter } from '@auth/prisma-adapter';
+import { GetServerSidePropsContext } from 'next';
 import {
-  type DefaultSession,
-  type AuthOptions,
   getServerSession,
+  type DefaultSession,
+  type NextAuthOptions,
 } from 'next-auth';
+import { Adapter } from 'next-auth/adapters';
 import GoogleProvider from 'next-auth/providers/google';
 import { prisma } from './prisma';
-import { Adapter } from 'next-auth/adapters';
-import {
-  GetServerSidePropsContext,
-  NextApiRequest,
-  NextApiResponse,
-} from 'next';
 
 declare module 'next-auth' {
   /**
@@ -19,6 +15,7 @@ declare module 'next-auth' {
    */
   interface Session {
     user: {
+      id: string;
       /**
        * By default, TypeScript merges new interface properties and overwrites existing ones.
        * In this case, the default session user properties will be overwritten,
@@ -29,7 +26,7 @@ declare module 'next-auth' {
   }
 }
 
-export const authOptions: AuthOptions = {
+export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as Adapter,
   providers: [
     GoogleProvider({
@@ -39,17 +36,16 @@ export const authOptions: AuthOptions = {
   ],
   callbacks: {
     session({ session, token, user }) {
+      session.user.id = user.id;
       return session; // The return type will match the one returned in `useSession()`
     },
   },
   secret: process.env.AUTH_SECRET as string,
 };
 
-export function auth(
-  ...args:
-    | [GetServerSidePropsContext['req'], GetServerSidePropsContext['res']]
-    | [NextApiRequest, NextApiResponse]
-    | []
-) {
-  return getServerSession(...args, authOptions);
+export function auth(ctx: {
+  req: GetServerSidePropsContext['req'];
+  res: GetServerSidePropsContext['res'];
+}) {
+  return getServerSession(ctx.req, ctx.res, authOptions);
 }

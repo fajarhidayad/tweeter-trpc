@@ -10,6 +10,9 @@ export const tweetRouter = router({
       orderBy: {
         createdAt: 'desc',
       },
+      include: {
+        author: true,
+      },
     });
 
     return tweet;
@@ -18,12 +21,14 @@ export const tweetRouter = router({
     .input(
       z.object({
         body: z.string().min(1).max(255),
+        authorId: z.string(),
       })
     )
     .mutation(async ({ input }) => {
       const newTweet = await prisma.tweet.create({
         data: {
           body: input.body,
+          authorId: input.authorId,
         },
       });
 

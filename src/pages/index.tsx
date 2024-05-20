@@ -1,3 +1,4 @@
+import type { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import Head from 'next/head';
 import SuggestedFollowBox from '~/components/SuggestedFollowBox';
 import TrendingTagBox from '~/components/TrendingTagBox';
@@ -6,9 +7,18 @@ import TweetInputBox from '~/components/TweetInputBox';
 import Grid from '~/components/layouts/Grid';
 import Main from '~/components/layouts/Main';
 import StickyTopContainer from '~/components/layouts/StickyTopContainer';
+import { auth } from '~/server/auth';
 import { trpc } from '~/utils/trpc';
+import { UserServerSessionProps } from '../../types/user-session';
 
-export default function Home() {
+export const getServerSideProps = (async ({ req, res }) => {
+  const session = await auth({ req, res });
+  return { props: { user: session?.user ?? null } };
+}) satisfies GetServerSideProps<{ user: UserServerSessionProps }>;
+
+export default function Home({
+  user,
+}: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const tweets = trpc.tweet.showAll.useQuery();
 
   return (
@@ -19,11 +29,16 @@ export default function Home() {
 
       <Grid className="relative">
         <section className="col-span-1 lg:col-span-2">
-          <TweetInputBox />
+          {user && <TweetInputBox />}
           {tweets.data && (
             <TweetContainer>
               {tweets.data.map((tweet) => (
-                <TweetBox key={tweet.id} body={tweet.body} />
+                <TweetBox
+                  key={tweet.id}
+                  body={tweet.body}
+                  authorName={tweet.author.name!}
+                  authorImg={tweet.author.image!}
+                />
               ))}
             </TweetContainer>
           )}

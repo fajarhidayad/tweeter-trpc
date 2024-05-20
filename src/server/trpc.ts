@@ -3,8 +3,7 @@ import { CreateNextContextOptions } from '@trpc/server/adapters/next';
 import { auth } from './auth';
 
 export const createContext = async (opts: CreateNextContextOptions) => {
-  // const session = await getSession();
-  const session = await auth(opts.req, opts.res);
+  const session = await auth({ req: opts.req, res: opts.res });
 
   return {
     session,
