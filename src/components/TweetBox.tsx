@@ -9,6 +9,7 @@ import { ReactNode } from 'react';
 import Avatar from './Avatar';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export function TweetContainer(props: { children: ReactNode }) {
   return <ul className="space-y-4">{props.children}</ul>;
@@ -31,7 +32,9 @@ export function TweetBox(props: {
           />
         </div>
         <div className="font-medium">
-          <p>{props.authorName}</p>
+          <Link href={`/coba`} className="hover:underline">
+            {props.authorName}
+          </Link>
           <p className="text-xs text-gray-400 mt-1">24 August at 20:43</p>
         </div>
       </div>

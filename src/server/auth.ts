@@ -5,7 +5,7 @@ import {
   type DefaultSession,
   type NextAuthOptions,
 } from 'next-auth';
-import { Adapter } from 'next-auth/adapters';
+import { Adapter, type AdapterUser } from 'next-auth/adapters';
 import GoogleProvider from 'next-auth/providers/google';
 import { prisma } from './prisma';
 
@@ -16,6 +16,7 @@ declare module 'next-auth' {
   interface Session {
     user: {
       id: string;
+      username: string | null;
       /**
        * By default, TypeScript merges new interface properties and overwrites existing ones.
        * In this case, the default session user properties will be overwritten,
@@ -37,6 +38,8 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     session({ session, token, user }) {
       session.user.id = user.id;
+      // @ts-ignore
+      session.user.username = user.username;
       return session; // The return type will match the one returned in `useSession()`
     },
   },

@@ -40,7 +40,7 @@ export default function UserPage() {
 
           <section className="col-span-1 lg:col-span-2">
             <TweetContainer>
-              <TweetBox body="Traveling" />
+              <></>
             </TweetContainer>
           </section>
         </Grid>
