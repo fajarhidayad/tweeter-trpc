@@ -1,3 +1,4 @@
+import { useSession } from 'next-auth/react';
 import Head from 'next/head';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
@@ -12,35 +13,55 @@ import Main from '~/components/layouts/Main';
 import StickyTopContainer from '~/components/layouts/StickyTopContainer';
 import { Dialog, DialogContent, DialogTrigger } from '~/components/ui/dialog';
 import { Separator } from '~/components/ui/separator';
+import { trpc } from '~/utils/trpc';
 
 export default function UserPage() {
+  const session = useSession();
   const router = useRouter();
-  const username = router.query.username;
+  const username = router.query.username as string;
+  const { data: user } = trpc.user.profile.useQuery({ username });
+  const userTweets = trpc.tweet.userTweets.useQuery({ username });
 
   return (
     <>
       <Head>
-        <title>User (@{username}) | Tweeter</title>
+        <title>
+          {user ? user.name : 'User Not Found'} (@{username}) | Tweeter
+        </title>
       </Head>
 
       <div className="bg-gray-300 w-full h-[168px] lg:h-[300px]"></div>
 
       <Main className="-translate-y-7 lg:-translate-y-16 pt-0">
         <Grid className="gap-y-5">
-          <UserDescriptionContainer />
+          <UserDescriptionContainer
+            name={user?.name}
+            bio={user?.bio}
+            userImg={user?.image}
+            isUserSession={session.data?.user.id === user?.id}
+          />
 
-          <StickyTopContainer className="top-20 col-span-1">
-            <FilterTweetContainer>
-              <FilterTweetLink isActive>Tweets</FilterTweetLink>
-              <FilterTweetLink>Tweets & replies</FilterTweetLink>
-              <FilterTweetLink>Media</FilterTweetLink>
-              <FilterTweetLink>Likes</FilterTweetLink>
-            </FilterTweetContainer>
-          </StickyTopContainer>
+          {user && (
+            <StickyTopContainer className="top-20 col-span-1">
+              <FilterTweetContainer>
+                <FilterTweetLink isActive>Tweets</FilterTweetLink>
+                <FilterTweetLink>Tweets & replies</FilterTweetLink>
+                <FilterTweetLink>Media</FilterTweetLink>
+                <FilterTweetLink>Likes</FilterTweetLink>
+              </FilterTweetContainer>
+            </StickyTopContainer>
+          )}
 
           <section className="col-span-1 lg:col-span-2">
             <TweetContainer>
-              <></>
+              {userTweets.data?.map((tweet) => (
+                <TweetBox
+                  key={tweet.id}
+                  body={tweet.body}
+                  authorImg={tweet.author.image!}
+                  authorName={tweet.author.name!}
+                />
+              ))}
             </TweetContainer>
           </section>
         </Grid>
@@ -49,24 +70,31 @@ export default function UserPage() {
   );
 }
 
-function UserDescriptionContainer() {
+function UserDescriptionContainer(props: {
+  name?: string | null;
+  userImg?: string | null;
+  bio?: string | null;
+  isUserSession: boolean;
+}) {
   return (
     <section className="col-span-1 lg:col-span-3 bg-white rounded-xl shadow p-5">
       <div className="flex flex-col md:flex-row items-center md:items-start -translate-y-20 md:translate-y-0">
         <div className="bg-white p-1 rounded-lg w-[152px] min-h-[152px] -translate-y-0 md:-translate-y-20 mb-3 md:mb-0 md:mr-5">
-          <Image
-            className="rounded-lg"
-            src={'https://github.com/shadcn.png'}
-            alt="Profile Picture"
-            width={152}
-            height={152}
-          />
+          {props.userImg && (
+            <Image
+              className="rounded-lg"
+              src={props.userImg}
+              alt="Profile Picture"
+              width={152}
+              height={152}
+            />
+          )}
         </div>
 
         <div className="flex-1">
           <div className="flex flex-col md:flex-row items-center mb-5">
             <h2 className="font-semibold text-2xl text-gray-800 md:mr-6">
-              Daniel Jensen
+              {props.name ? props.name : 'User not found'}
             </h2>
             <div className="flex flex-col md:flex-row flex-1 items-center">
               <div className="flex items-center">
@@ -95,15 +123,18 @@ function UserDescriptionContainer() {
                   <span className="text-gray-600 font-medium">Followers</span>
                 </p>
               </div>
-              <FollowButton className="hidden md:flex px-6 py-2" />
+              {!props.isUserSession && (
+                <FollowButton className="hidden md:flex px-6 py-2" />
+              )}
             </div>
           </div>
 
           <p className="text-center md:text-start text-gray-500 max-w-[420px]">
-            Lorem ipsum dolor sit, amet consectetur adipisicing elit. Inventore,
-            amet.
+            {props.bio ? props.bio : 'No bio'}
           </p>
-          <FollowButton className="flex md:hidden px-6 py-2 mx-auto mt-5" />
+          {props.isUserSession && (
+            <FollowButton className="flex md:hidden px-6 py-2 mx-auto mt-5" />
+          )}
         </div>
       </div>
     </section>

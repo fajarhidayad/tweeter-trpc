@@ -37,6 +37,7 @@ export default function Navbar() {
             <AccountPopover
               accountName={session.data.user.name as string}
               image={session.data.user.image as string}
+              username={session.data.user.username}
             />
           ) : (
             <SignInDialog />
@@ -95,7 +96,11 @@ function PopoverLink(props: {
   );
 }
 
-function AccountPopover(props: { accountName: string; image: string }) {
+function AccountPopover(props: {
+  accountName: string;
+  image: string;
+  username: string | null;
+}) {
   return (
     <Popover>
       <PopoverTrigger className="flex items-center space-x-3">
@@ -104,7 +109,7 @@ function AccountPopover(props: { accountName: string; image: string }) {
         <ChevronDownIcon size={20} />
       </PopoverTrigger>
       <PopoverContent className="bg-white flex flex-col shadow rounded-xl w-[192px] px-3 py-4 right-0">
-        <PopoverLink href="/user">
+        <PopoverLink href={`/${props.username}`}>
           <CircleUserIcon size={20} className="mr-2.5" />
           My Profile
         </PopoverLink>
