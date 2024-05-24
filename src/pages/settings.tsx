@@ -19,6 +19,8 @@ import { Input } from '~/components/ui/input';
 import { Textarea } from '~/components/ui/textarea';
 import { profileSchema } from '~/server/routers/user';
 import { trpc } from '~/utils/trpc';
+import { useSession } from 'next-auth/react';
+import { useToast } from '~/components/ui/use-toast';
 
 type FormProfileSchema = z.infer<typeof profileSchema>;
 
@@ -38,14 +40,29 @@ export const getServerSideProps = (async ({ req, res }) => {
 export default function SettingsPage({
   user,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+  const session = useSession();
+  const { toast } = useToast();
+
+  const userProfile = trpc.user.profile.useQuery({
+    username: user.username ?? '',
+  });
   const form = useForm<FormProfileSchema>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       name: user.name!,
+      username: user.username ?? '',
+      bio: userProfile.data?.bio ?? '',
     },
   });
 
-  const profileMutation = trpc.user.updateProfile.useMutation();
+  const profileMutation = trpc.user.updateProfile.useMutation({
+    onSuccess({ username }) {
+      session.update({ username });
+      toast({
+        description: 'Updated',
+      });
+    },
+  });
 
   function onSubmitForm(values: FormProfileSchema) {
     profileMutation.mutate(values);

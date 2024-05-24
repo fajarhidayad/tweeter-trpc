@@ -16,7 +16,7 @@ declare module 'next-auth' {
   interface Session {
     user: {
       id: string;
-      username: string | null;
+      username: string | null | undefined;
       /**
        * By default, TypeScript merges new interface properties and overwrites existing ones.
        * In this case, the default session user properties will be overwritten,
@@ -38,7 +38,6 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     session({ session, token, user }) {
       session.user.id = user.id;
-      // @ts-ignore
       session.user.username = user.username;
       return session; // The return type will match the one returned in `useSession()`
     },

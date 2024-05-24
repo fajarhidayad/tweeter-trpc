@@ -21,7 +21,6 @@ export default function TweetInputBox() {
     if (body.length < 1) return;
     tweetMutation.mutate({
       body,
-      authorId: session.data?.user.id as string,
     });
   }
 

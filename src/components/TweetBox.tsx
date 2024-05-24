@@ -42,6 +42,7 @@ export function TweetBox(props: {
       <p className="text-gray-800 mb-4">{props.body}</p>
 
       <div className="flex justify-end items-center space-x-4 mb-2">
+        <p className="text-xs text-gray-400">200 Likes</p>
         <p className="text-xs text-gray-400">449 Comments</p>
         <p className="text-xs text-gray-400">96 Retweets</p>
         <p className="text-xs text-gray-400">54 Saved</p>

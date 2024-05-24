@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { prisma } from '../prisma';
-import { procedure, router } from '../trpc';
+import { authProcedure, procedure, router } from '../trpc';
 import { TRPCError } from '@trpc/server';
 
 export const tweetRouter = router({
@@ -18,18 +18,17 @@ export const tweetRouter = router({
 
     return tweet;
   }),
-  create: procedure
+  create: authProcedure
     .input(
       z.object({
         body: z.string().min(1).max(255),
-        authorId: z.string(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const newTweet = await prisma.tweet.create({
         data: {
           body: input.body,
-          authorId: input.authorId,
+          authorId: ctx.user.id,
         },
       });
 

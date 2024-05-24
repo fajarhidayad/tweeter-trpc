@@ -28,6 +28,16 @@ export const userRouter = router({
 
       if (!user) throw new TRPCError({ code: 'NOT_FOUND' });
 
+      const checkUsername = await prisma.user.findUnique({
+        where: { username: input.username },
+      });
+
+      if (checkUsername && checkUsername.id !== user.id)
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'Username already exist',
+        });
+
       const updateUser = await prisma.user.update({
         where: { id: user.id },
         data: {
