@@ -44,9 +44,15 @@ export default function Home({
               {tweets.data.map((tweet) => (
                 <TweetBox
                   key={tweet.id}
+                  id={tweet.id}
                   body={tweet.body}
                   authorName={tweet.author.name!}
+                  username={tweet.author.username!}
                   authorImg={tweet.author.image!}
+                  bookmarkCount={tweet._count.bookmarks}
+                  createdAt={tweet.createdAt}
+                  // @ts-ignore
+                  isBookmarked={tweet.bookmarks ?? 0}
                 />
               ))}
             </TweetContainer>

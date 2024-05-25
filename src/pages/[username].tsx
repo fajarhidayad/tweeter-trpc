@@ -19,8 +19,10 @@ export default function UserPage() {
   const session = useSession();
   const router = useRouter();
   const username = router.query.username as string;
-  const { data: user } = trpc.user.profile.useQuery({ username });
+  const { data: user, isLoading } = trpc.user.profile.useQuery({ username });
   const userTweets = trpc.tweet.userTweets.useQuery({ username });
+
+  if (isLoading) return;
 
   return (
     <>
@@ -57,9 +59,13 @@ export default function UserPage() {
               {userTweets.data?.map((tweet) => (
                 <TweetBox
                   key={tweet.id}
+                  id={tweet.id}
                   body={tweet.body}
+                  username={tweet.author.username!}
                   authorImg={tweet.author.image!}
                   authorName={tweet.author.name!}
+                  bookmarkCount={tweet._count.bookmarks}
+                  createdAt={tweet.createdAt}
                 />
               ))}
             </TweetContainer>

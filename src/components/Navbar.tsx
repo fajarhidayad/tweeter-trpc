@@ -37,7 +37,7 @@ export default function Navbar() {
             <AccountPopover
               accountName={session.data.user.name as string}
               image={session.data.user.image as string}
-              username={session.data.user.username}
+              username={session.data.user.username as string}
             />
           ) : (
             <SignInDialog />

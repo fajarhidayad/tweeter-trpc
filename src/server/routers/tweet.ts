@@ -4,14 +4,37 @@ import { authProcedure, procedure, router } from '../trpc';
 import { TRPCError } from '@trpc/server';
 
 export const tweetRouter = router({
-  showAll: procedure.query(async () => {
+  showAll: procedure.query(async ({ ctx }) => {
     const limit = 10;
+
+    if (ctx.session) {
+      return await prisma.tweet.findMany({
+        take: limit,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        include: {
+          _count: true,
+          author: true,
+          bookmarks: {
+            select: {
+              userId: true,
+            },
+            where: {
+              userId: ctx.session.user.id,
+            },
+          },
+        },
+      });
+    }
+
     const tweet = await prisma.tweet.findMany({
       take: limit,
       orderBy: {
         createdAt: 'desc',
       },
       include: {
+        _count: true,
         author: true,
       },
     });
@@ -48,10 +71,52 @@ export const tweetRouter = router({
         where: {
           authorId: user.id,
         },
-        include: { author: true },
+        include: { author: true, _count: true },
         take: 10,
       });
 
       return tweets;
     }),
+  bookmark: authProcedure
+    .input(z.object({ tweetId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const checkBookmark = await prisma.bookmark.findFirst({
+        where: { tweetId: input.tweetId, userId: ctx.user.id },
+      });
+
+      if (checkBookmark) {
+        return await prisma.bookmark.delete({
+          where: { id: checkBookmark.id },
+        });
+      } else {
+        return await prisma.bookmark.create({
+          data: { tweetId: input.tweetId, userId: ctx.user.id },
+        });
+      }
+    }),
+  showUserBookmarks: authProcedure.query(async ({ ctx }) => {
+    const bookmarks = await prisma.bookmark.findMany({
+      where: { userId: ctx.user.id },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: 10,
+      include: {
+        tweet: {
+          include: {
+            _count: true,
+          },
+        },
+        user: {
+          select: {
+            name: true,
+            username: true,
+            image: true,
+          },
+        },
+      },
+    });
+
+    return bookmarks;
+  }),
 });

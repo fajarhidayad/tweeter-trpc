@@ -28,7 +28,7 @@ export const procedure = t.procedure;
 export const authProcedure = procedure.use(async (opts) => {
   const { ctx } = opts;
   if (!ctx.session) {
-    throw new TRPCError({ code: 'UNAUTHORIZED' });
+    throw new TRPCError({ code: 'FORBIDDEN' });
   }
 
   return opts.next({

@@ -11,6 +11,8 @@ import Main from '~/components/layouts/Main';
 import StickyTopContainer from '~/components/layouts/StickyTopContainer';
 import { UserServerSessionProps } from '../../types/user-session';
 import { auth } from '~/server/auth';
+import { trpc } from '~/utils/trpc';
+import Loading from '~/components/Loading';
 
 export const getServerSideProps = (async ({ req, res }) => {
   const session = await auth({ req, res });
@@ -28,6 +30,8 @@ export const getServerSideProps = (async ({ req, res }) => {
 export default function BookmarkPage({
   user,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+  const bookmarks = trpc.tweet.showUserBookmarks.useQuery();
+
   return (
     <Main>
       <Head>
@@ -45,9 +49,25 @@ export default function BookmarkPage({
         </StickyTopContainer>
 
         <section className="col-span-2">
-          <TweetContainer>
-            <></>
-          </TweetContainer>
+          {bookmarks.data ? (
+            <TweetContainer>
+              {bookmarks.data.map((bookmark) => (
+                <TweetBox
+                  key={bookmark.id}
+                  id={bookmark.id}
+                  body={bookmark.tweet.body}
+                  username={bookmark.user.username!}
+                  authorImg={bookmark.user.image!}
+                  authorName={bookmark.user.name!}
+                  bookmarkCount={bookmark.tweet._count.bookmarks}
+                  createdAt={bookmark.tweet.createdAt}
+                  isBookmarked={bookmark.userId === user.id}
+                />
+              ))}
+            </TweetContainer>
+          ) : (
+            <Loading />
+          )}
         </section>
       </Grid>
     </Main>
