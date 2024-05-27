@@ -105,7 +105,7 @@ function AccountPopover(props: {
     <Popover>
       <PopoverTrigger className="flex items-center space-x-3">
         <Avatar image={props.image} alt={props.accountName} />
-        <p className="font-semibold">{props.accountName}</p>
+        <p className="font-semibold hidden lg:block">{props.accountName}</p>
         <ChevronDownIcon size={20} />
       </PopoverTrigger>
       <PopoverContent className="bg-white flex flex-col shadow rounded-xl w-[192px] px-3 py-4 right-0">

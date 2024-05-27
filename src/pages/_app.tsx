@@ -7,6 +7,7 @@ import { SessionProvider } from 'next-auth/react';
 import { type Session } from 'next-auth';
 import Auth from '~/components/layouts/Auth';
 import { Toaster } from '~/components/ui/toaster';
+import MobileNav from '~/components/layouts/MobileNav';
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -23,6 +24,7 @@ const App: AppType<{ session: Session | null }> = ({
         <main className={poppins.className + ' bg-gray-100 min-h-screen'}>
           <Navbar />
           <Component {...pageProps} />
+          <MobileNav />
           <Toaster />
         </main>
       </Auth>

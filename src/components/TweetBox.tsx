@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { trpc } from '~/utils/trpc';
 import { formatDate } from '~/utils/format-date';
 import classNames from 'classnames';
+import { twMerge } from 'tailwind-merge';
 
 export function TweetContainer(props: { children: ReactNode }) {
   return <ul className="space-y-4">{props.children}</ul>;
@@ -24,12 +25,21 @@ export function TweetBox(props: {
   authorName: string;
   authorImg: string;
   bookmarkCount: number;
+  likeCount: number;
   username: string;
   createdAt: string;
   isBookmarked?: boolean;
+  isLiked?: boolean;
 }) {
   const utils = trpc.useUtils();
   const saveTweet = trpc.tweet.bookmark.useMutation({
+    onSuccess() {
+      utils.tweet.showUserBookmarks.invalidate();
+      utils.tweet.showAll.invalidate();
+      utils.tweet.userTweets.invalidate();
+    },
+  });
+  const likeTweet = trpc.tweet.like.useMutation({
     onSuccess() {
       utils.tweet.showUserBookmarks.invalidate();
       utils.tweet.showAll.invalidate();
@@ -61,7 +71,7 @@ export function TweetBox(props: {
       <p className="text-gray-800 mb-4">{props.body}</p>
 
       <div className="flex justify-end items-center space-x-4 mb-2">
-        <p className="text-xs text-gray-400">0 Likes</p>
+        <p className="text-xs text-gray-400">{props.likeCount} Likes</p>
         <p className="text-xs text-gray-400">0 Comments</p>
         <p className="text-xs text-gray-400">0 Retweets</p>
         <p className="text-xs text-gray-400">
@@ -76,12 +86,16 @@ export function TweetBox(props: {
         <TweetBoxButton label="Retweet">
           <Repeat2Icon />
         </TweetBoxButton>
-        <TweetBoxButton label="Like">
+        <TweetBoxButton
+          label={props.isLiked ? 'Liked' : 'Like'}
+          className={props.isLiked ? 'text-red-500' : ''}
+          onClick={() => likeTweet.mutate({ tweetId: props.id })}
+        >
           <HeartIcon />
         </TweetBoxButton>
         <TweetBoxButton
           label={props.isBookmarked ? 'Saved' : 'Save'}
-          isActive={props.isBookmarked}
+          className={props.isBookmarked ? 'text-yellow-400' : ''}
           onClick={() => saveTweet.mutate({ tweetId: props.id })}
         >
           <BookmarkIcon />
@@ -93,29 +107,22 @@ export function TweetBox(props: {
   );
 }
 
-function TweetBoxButton({
-  children,
-  label,
-  onClick,
-  isActive,
-}: {
+function TweetBoxButton(props: {
   children: ReactNode;
   label: string;
-  isActive?: boolean;
   onClick?: () => void;
+  className?: string;
 }) {
   return (
     <button
-      onClick={onClick}
-      className={classNames({
-        'flex justify-center items-center space-x-3 text-sm py-2.5 rounded-lg hover:bg-gray-100':
-          true,
-        'text-gray-600': !isActive,
-        'text-yellow-400': isActive,
-      })}
+      onClick={props.onClick}
+      className={twMerge(
+        'flex justify-center items-center space-x-3 text-sm py-2.5 rounded-lg hover:bg-gray-100 text-gray-600',
+        props.className
+      )}
     >
-      {children}
-      <span className="hidden lg:block">{label}</span>
+      {props.children}
+      <span className="hidden lg:block">{props.label}</span>
     </button>
   );
 }

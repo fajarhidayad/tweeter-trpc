@@ -6,7 +6,9 @@ export default function StickyTopContainer(props: {
   className?: string;
 }) {
   return (
-    <section className={twMerge('sticky top-5 self-start', props.className)}>
+    <section
+      className={twMerge('static lg:sticky top-5 self-start', props.className)}
+    >
       {props.children}
     </section>
   );

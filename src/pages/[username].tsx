@@ -65,7 +65,10 @@ export default function UserPage() {
                   authorImg={tweet.author.image!}
                   authorName={tweet.author.name!}
                   bookmarkCount={tweet._count.bookmarks}
+                  likeCount={tweet._count.likes}
                   createdAt={tweet.createdAt}
+                  // @ts-ignore
+                  isBookmarked={tweet.bookmarks && tweet.bookmarks.length}
                 />
               ))}
             </TweetContainer>

@@ -24,6 +24,14 @@ export const tweetRouter = router({
               userId: ctx.session.user.id,
             },
           },
+          likes: {
+            select: {
+              userId: true,
+            },
+            where: {
+              userId: ctx.session.user.id,
+            },
+          },
         },
       });
     }
@@ -71,11 +79,34 @@ export const tweetRouter = router({
         where: {
           authorId: user.id,
         },
-        include: { author: true, _count: true },
+        include: {
+          author: true,
+          _count: true,
+          likes: {
+            select: {
+              userId: true,
+            },
+          },
+        },
         take: 10,
       });
 
       return tweets;
+    }),
+  like: authProcedure
+    .input(z.object({ tweetId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const checkLiked = await prisma.like.findFirst({
+        where: { tweetId: input.tweetId, userId: ctx.user.id },
+      });
+
+      if (checkLiked) {
+        return await prisma.like.delete({ where: { id: checkLiked.id } });
+      }
+
+      return await prisma.like.create({
+        data: { tweetId: input.tweetId, userId: ctx.user.id },
+      });
     }),
   bookmark: authProcedure
     .input(z.object({ tweetId: z.number() }))

@@ -48,9 +48,16 @@ export default function ExplorePage({
               tweets.data.map((tweet) => (
                 <TweetBox
                   key={tweet.id}
+                  id={tweet.id}
                   body={tweet.body}
                   authorImg={tweet.author.image!}
                   authorName={tweet.author.name!}
+                  username={tweet.author.username!}
+                  createdAt={tweet.createdAt}
+                  bookmarkCount={tweet._count.bookmarks}
+                  likeCount={tweet._count.likes}
+                  // @ts-ignore
+                  isBookmarked={tweet.bookmarks && tweet.bookmarks.length}
                 />
               ))}
           </TweetContainer>

@@ -50,9 +50,12 @@ export default function Home({
                   username={tweet.author.username!}
                   authorImg={tweet.author.image!}
                   bookmarkCount={tweet._count.bookmarks}
+                  likeCount={tweet._count.likes}
                   createdAt={tweet.createdAt}
                   // @ts-ignore
-                  isBookmarked={tweet.bookmarks ?? 0}
+                  isBookmarked={tweet.bookmarks && tweet.bookmarks.length}
+                  // @ts-ignore
+                  isLiked={tweet.likes && tweet.likes.length}
                 />
               ))}
             </TweetContainer>
