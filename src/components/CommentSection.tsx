@@ -5,6 +5,7 @@ import Link from 'next/link';
 import React from 'react';
 import { formatDate } from '~/utils/format-date';
 import { trpc } from '~/utils/trpc';
+import Loading from './Loading';
 
 export default function CommentSection(props: { tweetId: number }) {
   const utils = trpc.useUtils();
@@ -14,6 +15,13 @@ export default function CommentSection(props: { tweetId: number }) {
       utils.tweet.showComment.invalidate();
     },
   });
+
+  if (comments.isLoading)
+    return (
+      <div className="pt-5">
+        <Loading />
+      </div>
+    );
 
   return (
     <ul className="pt-5 space-y-4">

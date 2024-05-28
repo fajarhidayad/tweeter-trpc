@@ -143,6 +143,14 @@ export const tweetRouter = router({
         tweet: {
           include: {
             _count: true,
+            likes: {
+              select: {
+                userId: true,
+              },
+              where: {
+                userId: ctx.user.id,
+              },
+            },
           },
         },
         user: {

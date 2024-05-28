@@ -63,6 +63,11 @@ export default function BookmarkPage({
                   likeCount={bookmark.tweet._count.likes}
                   commentCount={bookmark.tweet._count.comments}
                   createdAt={bookmark.tweet.createdAt}
+                  isLiked={
+                    bookmark.tweet.likes && bookmark.tweet.likes.length > 0
+                      ? true
+                      : false
+                  }
                   isBookmarked={bookmark.userId === user.id}
                 />
               ))}

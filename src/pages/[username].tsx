@@ -1,12 +1,14 @@
 import { useSession } from 'next-auth/react';
 import Head from 'next/head';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import {
   FilterTweetContainer,
   FilterTweetLink,
 } from '~/components/FilterTweetContainer';
 import FollowButton from '~/components/FollowButton';
+import Loading from '~/components/Loading';
 import { TweetBox, TweetContainer } from '~/components/TweetBox';
 import Grid from '~/components/layouts/Grid';
 import Main from '~/components/layouts/Main';
@@ -40,7 +42,10 @@ export default function UserPage() {
             name={user?.name}
             bio={user?.bio}
             userImg={user?.image}
+            userId={user?.id!}
             isUserSession={session.data?.user.id === user?.id}
+            followersCount={user?._count.followers!}
+            followingCount={user?._count.following!}
           />
 
           {user && (
@@ -83,11 +88,21 @@ export default function UserPage() {
 }
 
 function UserDescriptionContainer(props: {
+  userId: string;
   name?: string | null;
   userImg?: string | null;
   bio?: string | null;
   isUserSession: boolean;
+  followersCount: number;
+  followingCount: number;
 }) {
+  const utils = trpc.useUtils();
+  const followMutation = trpc.user.follow.useMutation({
+    onSuccess() {
+      utils.user.profile.invalidate();
+    },
+  });
+
   return (
     <section className="col-span-1 lg:col-span-3 bg-white rounded-xl shadow p-5">
       <div className="flex flex-col md:flex-row items-center md:items-start -translate-y-20 md:translate-y-0">
@@ -113,30 +128,31 @@ function UserDescriptionContainer(props: {
                 <Dialog>
                   <DialogTrigger>
                     <p className="font-semibold text-xs text-gray-800 mr-5 hover:underline hover:cursor-pointer">
-                      2,569{' '}
+                      {props.followersCount}{' '}
                       <span className="text-gray-600 font-medium">
                         Following
                       </span>
                     </p>
                   </DialogTrigger>
                   <DialogContent className="rounded-lg py-5 px-0">
-                    <p className="font-semibold text-xs px-5">
-                      Daniel Jensen is following
-                    </p>
-                    <Separator className="px-5 py-0" />
-                    <ul className="max-h-[400px] overflow-y-scroll px-5">
-                      <UserFollowItem />
-                      <UserFollowItem />
-                    </ul>
+                    <UserFollowListPopover
+                      userId={props.userId}
+                      name={props.name!}
+                    />
                   </DialogContent>
                 </Dialog>
                 <p className="font-semibold text-xs text-gray-800 hover:underline hover:cursor-pointer mr-auto">
-                  10.8K{' '}
+                  {props.followingCount}{' '}
                   <span className="text-gray-600 font-medium">Followers</span>
                 </p>
               </div>
-              {!props.isUserSession && (
-                <FollowButton className="hidden md:flex px-6 py-2" />
+              {!props.isUserSession && props.userId && (
+                <FollowButton
+                  onClick={() =>
+                    followMutation.mutate({ userId: props.userId })
+                  }
+                  className="hidden md:flex px-6 py-2"
+                />
               )}
             </div>
           </div>
@@ -144,8 +160,11 @@ function UserDescriptionContainer(props: {
           <p className="text-center md:text-start text-gray-500 max-w-[420px]">
             {props.bio ? props.bio : 'No bio'}
           </p>
-          {props.isUserSession && (
-            <FollowButton className="flex md:hidden px-6 py-2 mx-auto mt-5" />
+          {props.isUserSession && props.userId && (
+            <FollowButton
+              onClick={() => followMutation.mutate({ userId: props.userId })}
+              className="flex md:hidden px-6 py-2 mx-auto mt-5"
+            />
           )}
         </div>
       </div>
@@ -153,17 +172,44 @@ function UserDescriptionContainer(props: {
   );
 }
 
-function UserFollowItem() {
+function UserFollowListPopover(props: { userId: string; name: string }) {
+  const following = trpc.user.showFollowing.useQuery({ userId: props.userId });
+
+  if (following.isLoading) return <Loading />;
+
   return (
-    <li className="border-b last:border-b-0 py-4">
-      <div className="flex items-center">
-        <div className="w-10 h-10 bg-blue-200 rounded-lg mr-4"></div>
-        <div className="font-medium">
-          <h3 className="mb-2">Austin Neill</h3>
-          <p className="text-xs text-gray-500">120 followers</p>
-        </div>
-        <FollowButton />
-      </div>
-    </li>
+    <>
+      <p className="font-semibold text-xs px-5">{props.name} is following</p>
+      <Separator className="px-5 py-0" />
+      <ul className="max-h-[400px] overflow-y-scroll px-5">
+        {following.data && following.data.length > 0 ? (
+          following.data?.map((item) => (
+            <li key={item.id} className="border-b last:border-b-0 py-4">
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-blue-200 rounded-lg mr-4 overflow-hidden">
+                  <Image
+                    src={item.following.image!}
+                    alt={item.following.name!}
+                    width={40}
+                    height={40}
+                  />
+                </div>
+                <div className="font-medium">
+                  <Link href={`/${item.following.username}`} className="mb-2">
+                    {item.following.name}
+                  </Link>
+                  <p className="text-xs text-gray-500">
+                    {item.following._count.following} followers
+                  </p>
+                </div>
+                <FollowButton />
+              </div>
+            </li>
+          ))
+        ) : (
+          <p className="text-center text-sm text-gray-500">No following</p>
+        )}
+      </ul>
+    </>
   );
 }

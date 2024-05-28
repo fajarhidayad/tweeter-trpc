@@ -15,6 +15,19 @@ export const userRouter = router({
     .query(async ({ input }) => {
       const user = await prisma.user.findUnique({
         where: { username: input.username },
+        select: {
+          id: true,
+          name: true,
+          bio: true,
+          username: true,
+          image: true,
+          _count: {
+            select: {
+              following: true,
+              followers: true,
+            },
+          },
+        },
       });
 
       if (!user) throw new TRPCError({ code: 'NOT_FOUND' });
@@ -48,5 +61,62 @@ export const userRouter = router({
       });
 
       return updateUser;
+    }),
+  follow: authProcedure
+    .input(z.object({ userId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const checkFollow = await prisma.follower.findFirst({
+        where: {
+          followerId: ctx.user.id,
+          followingId: input.userId,
+        },
+      });
+
+      if (checkFollow) {
+        return await prisma.follower.delete({
+          where: {
+            id: checkFollow.id,
+          },
+        });
+      }
+
+      return await prisma.follower.create({
+        data: {
+          followerId: ctx.user.id,
+          followingId: input.userId,
+        },
+      });
+    }),
+  showFollowing: procedure
+    .input(z.object({ userId: z.string() }))
+    .query(async ({ input }) => {
+      const user = await prisma.user.findUnique({
+        where: { id: input.userId },
+        select: {
+          id: true,
+        },
+      });
+
+      if (!user)
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
+
+      const following = await prisma.follower.findMany({
+        where: {
+          followerId: user.id,
+        },
+        take: 10,
+        include: {
+          following: {
+            select: {
+              image: true,
+              name: true,
+              _count: true,
+              username: true,
+            },
+          },
+        },
+      });
+
+      return following;
     }),
 });
