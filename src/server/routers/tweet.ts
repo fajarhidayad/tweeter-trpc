@@ -7,36 +7,7 @@ export const tweetRouter = router({
   showAll: procedure.query(async ({ ctx }) => {
     const limit = 10;
 
-    if (ctx.session) {
-      return await prisma.tweet.findMany({
-        take: limit,
-        orderBy: {
-          createdAt: 'desc',
-        },
-        include: {
-          _count: true,
-          author: true,
-          bookmarks: {
-            select: {
-              userId: true,
-            },
-            where: {
-              userId: ctx.session.user.id,
-            },
-          },
-          likes: {
-            select: {
-              userId: true,
-            },
-            where: {
-              userId: ctx.session.user.id,
-            },
-          },
-        },
-      });
-    }
-
-    const tweet = await prisma.tweet.findMany({
+    return await prisma.tweet.findMany({
       take: limit,
       orderBy: {
         createdAt: 'desc',
@@ -44,10 +15,28 @@ export const tweetRouter = router({
       include: {
         _count: true,
         author: true,
+        bookmarks: ctx.session
+          ? {
+              select: {
+                userId: true,
+              },
+              where: {
+                userId: ctx.session.user.id,
+              },
+            }
+          : false,
+        likes: ctx.session
+          ? {
+              select: {
+                userId: true,
+              },
+              where: {
+                userId: ctx.session.user.id,
+              },
+            }
+          : false,
       },
     });
-
-    return tweet;
   }),
   create: authProcedure
     .input(
@@ -67,7 +56,7 @@ export const tweetRouter = router({
     }),
   userTweets: procedure
     .input(z.object({ username: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const user = await prisma.user.findUnique({
         where: { username: input.username },
       });
@@ -80,13 +69,28 @@ export const tweetRouter = router({
           authorId: user.id,
         },
         include: {
-          author: true,
           _count: true,
-          likes: {
-            select: {
-              userId: true,
-            },
-          },
+          author: true,
+          bookmarks: ctx.session
+            ? {
+                select: {
+                  userId: true,
+                },
+                where: {
+                  userId: ctx.session.user.id,
+                },
+              }
+            : false,
+          likes: ctx.session
+            ? {
+                select: {
+                  userId: true,
+                },
+                where: {
+                  userId: ctx.session.user.id,
+                },
+              }
+            : false,
         },
         take: 10,
         orderBy: {
@@ -170,7 +174,7 @@ export const tweetRouter = router({
     }),
   showComment: procedure
     .input(z.object({ tweetId: z.number() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const comments = await prisma.comment.findMany({
         where: {
           tweetId: input.tweetId,
@@ -183,11 +187,39 @@ export const tweetRouter = router({
               username: true,
             },
           },
+          like: ctx.session
+            ? {
+                where: {
+                  userId: ctx.session.user.id,
+                },
+              }
+            : false,
           _count: true,
         },
         take: 10,
       });
 
       return comments;
+    }),
+  likeComment: authProcedure
+    .input(z.object({ commentId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const checkLike = await prisma.likeComment.findFirst({
+        where: {
+          userId: ctx.user.id,
+          commentId: input.commentId,
+        },
+      });
+
+      if (checkLike) {
+        return await prisma.likeComment.delete({ where: { id: checkLike.id } });
+      }
+
+      return await prisma.likeComment.create({
+        data: {
+          commentId: input.commentId,
+          userId: ctx.user.id,
+        },
+      });
     }),
 });

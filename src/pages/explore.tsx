@@ -56,8 +56,11 @@ export default function ExplorePage({
                   createdAt={tweet.createdAt}
                   bookmarkCount={tweet._count.bookmarks}
                   likeCount={tweet._count.likes}
-                  // @ts-ignore
-                  isBookmarked={tweet.bookmarks && tweet.bookmarks.length}
+                  commentCount={tweet._count.comments}
+                  isBookmarked={
+                    tweet.bookmarks && tweet.bookmarks.length > 0 ? true : false
+                  }
+                  isLiked={tweet.likes && tweet.likes.length > 0 ? true : false}
                 />
               ))}
           </TweetContainer>

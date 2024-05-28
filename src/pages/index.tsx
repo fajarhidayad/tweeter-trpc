@@ -53,10 +53,10 @@ export default function Home({
                   likeCount={tweet._count.likes}
                   commentCount={tweet._count.comments}
                   createdAt={tweet.createdAt}
-                  // @ts-ignore
-                  isBookmarked={tweet.bookmarks && tweet.bookmarks.length}
-                  // @ts-ignore
-                  isLiked={tweet.likes && tweet.likes.length}
+                  isBookmarked={
+                    tweet.bookmarks && tweet.bookmarks.length > 0 ? true : false
+                  }
+                  isLiked={tweet.likes && tweet.likes.length > 0 ? true : false}
                 />
               ))}
             </TweetContainer>

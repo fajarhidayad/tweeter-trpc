@@ -66,9 +66,12 @@ export default function UserPage() {
                   authorName={tweet.author.name!}
                   bookmarkCount={tweet._count.bookmarks}
                   likeCount={tweet._count.likes}
+                  commentCount={tweet._count.comments}
                   createdAt={tweet.createdAt}
-                  // @ts-ignore
-                  isBookmarked={tweet.bookmarks && tweet.bookmarks.length}
+                  isBookmarked={
+                    tweet.bookmarks && tweet.bookmarks.length > 0 ? true : false
+                  }
+                  isLiked={tweet.likes && tweet.likes.length > 0 ? true : false}
                 />
               ))}
             </TweetContainer>

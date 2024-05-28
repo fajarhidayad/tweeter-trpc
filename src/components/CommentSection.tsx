@@ -1,11 +1,19 @@
+import classNames from 'classnames';
 import { HeartIcon } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 import React from 'react';
 import { formatDate } from '~/utils/format-date';
 import { trpc } from '~/utils/trpc';
 
 export default function CommentSection(props: { tweetId: number }) {
+  const utils = trpc.useUtils();
   const comments = trpc.tweet.showComment.useQuery({ tweetId: props.tweetId });
+  const likeCommentMutation = trpc.tweet.likeComment.useMutation({
+    onSuccess() {
+      utils.tweet.showComment.invalidate();
+    },
+  });
 
   return (
     <ul className="pt-5 space-y-4">
@@ -23,9 +31,12 @@ export default function CommentSection(props: { tweetId: number }) {
             <div>
               <div className="bg-gray-100 rounded-lg px-4 pt-3 pb-5 mb-1">
                 <div className="flex items-center mb-2">
-                  <p className="text-sm font-medium mr-2">
+                  <Link
+                    href={`/${comment.user.username}`}
+                    className="text-sm font-medium mr-2 hover:underline"
+                  >
                     {comment.user.name}
-                  </p>
+                  </Link>
                   <span className="text-xs text-gray-500">
                     {formatDate(comment.createdAt)}
                   </span>
@@ -33,8 +44,19 @@ export default function CommentSection(props: { tweetId: number }) {
                 <p className="text-gray-700">{comment.comment}</p>
               </div>
               <div className="flex items-center text-xs text-gray-400 space-x-2">
-                <button className="flex space-x-1 hover:text-red-500">
-                  <HeartIcon size={16} /> <span>Like</span>
+                <button
+                  onClick={() =>
+                    likeCommentMutation.mutate({ commentId: comment.id })
+                  }
+                  className={classNames({
+                    'flex space-x-1 hover:text-red-500': true,
+                    'text-red-500': comment.like && comment.like.length,
+                  })}
+                >
+                  <HeartIcon size={16} />{' '}
+                  <span>
+                    {comment.like && comment.like.length ? 'Liked' : 'Like'}
+                  </span>
                 </button>
                 <span>&bull;</span>
                 <span>{comment._count.like} Likes</span>

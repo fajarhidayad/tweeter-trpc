@@ -61,6 +61,7 @@ export default function BookmarkPage({
                   authorName={bookmark.user.name!}
                   bookmarkCount={bookmark.tweet._count.bookmarks}
                   likeCount={bookmark.tweet._count.likes}
+                  commentCount={bookmark.tweet._count.comments}
                   createdAt={bookmark.tweet.createdAt}
                   isBookmarked={bookmark.userId === user.id}
                 />
