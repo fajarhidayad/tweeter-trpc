@@ -89,6 +89,9 @@ export const tweetRouter = router({
           },
         },
         take: 10,
+        orderBy: {
+          createdAt: 'desc',
+        },
       });
 
       return tweets;
@@ -150,4 +153,41 @@ export const tweetRouter = router({
 
     return bookmarks;
   }),
+  comment: authProcedure
+    .input(
+      z.object({ comment: z.string().min(1).max(255), tweetId: z.number() })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const newComment = await prisma.comment.create({
+        data: {
+          comment: input.comment,
+          tweetId: input.tweetId,
+          userId: ctx.user.id,
+        },
+      });
+
+      return newComment;
+    }),
+  showComment: procedure
+    .input(z.object({ tweetId: z.number() }))
+    .query(async ({ input }) => {
+      const comments = await prisma.comment.findMany({
+        where: {
+          tweetId: input.tweetId,
+        },
+        include: {
+          user: {
+            select: {
+              image: true,
+              name: true,
+              username: true,
+            },
+          },
+          _count: true,
+        },
+        take: 10,
+      });
+
+      return comments;
+    }),
 });

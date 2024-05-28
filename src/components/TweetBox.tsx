@@ -4,16 +4,17 @@ import {
   ImageIcon,
   MessageSquareIcon,
   Repeat2Icon,
+  SendHorizonalIcon,
 } from 'lucide-react';
-import { ReactNode } from 'react';
-import Avatar from './Avatar';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { trpc } from '~/utils/trpc';
-import { formatDate } from '~/utils/format-date';
-import classNames from 'classnames';
+import { FormEvent, ReactNode, useState } from 'react';
 import { twMerge } from 'tailwind-merge';
+import { formatDate } from '~/utils/format-date';
+import { trpc } from '~/utils/trpc';
+import Avatar from './Avatar';
+import CommentSection from './CommentSection';
 
 export function TweetContainer(props: { children: ReactNode }) {
   return <ul className="space-y-4">{props.children}</ul>;
@@ -26,11 +27,13 @@ export function TweetBox(props: {
   authorImg: string;
   bookmarkCount: number;
   likeCount: number;
+  commentCount: number;
   username: string;
   createdAt: string;
   isBookmarked?: boolean;
   isLiked?: boolean;
 }) {
+  const [showComment, setShowComment] = useState(false);
   const utils = trpc.useUtils();
   const saveTweet = trpc.tweet.bookmark.useMutation({
     onSuccess() {
@@ -72,7 +75,7 @@ export function TweetBox(props: {
 
       <div className="flex justify-end items-center space-x-4 mb-2">
         <p className="text-xs text-gray-400">{props.likeCount} Likes</p>
-        <p className="text-xs text-gray-400">0 Comments</p>
+        <p className="text-xs text-gray-400">{props.commentCount} Comments</p>
         <p className="text-xs text-gray-400">0 Retweets</p>
         <p className="text-xs text-gray-400">
           {props.bookmarkCount ?? 0} Saved
@@ -80,7 +83,10 @@ export function TweetBox(props: {
       </div>
 
       <div className="grid grid-cols-4 border-y py-1 gap-x-5 mb-2">
-        <TweetBoxButton label="Comment">
+        <TweetBoxButton
+          label="Comment"
+          onClick={() => setShowComment((prev) => !prev)}
+        >
           <MessageSquareIcon />
         </TweetBoxButton>
         <TweetBoxButton label="Retweet">
@@ -102,7 +108,12 @@ export function TweetBox(props: {
         </TweetBoxButton>
       </div>
 
-      <ReplySection />
+      {showComment && (
+        <>
+          <ReplySection tweetId={props.id} />
+          <CommentSection tweetId={props.id} />
+        </>
+      )}
     </li>
   );
 }
@@ -127,8 +138,26 @@ function TweetBoxButton(props: {
   );
 }
 
-function ReplySection() {
+function ReplySection(props: { tweetId: number }) {
+  const [comment, setComment] = useState('');
   const session = useSession();
+  const utils = trpc.useUtils();
+  const commentMutation = trpc.tweet.comment.useMutation({
+    onSuccess() {
+      utils.tweet.invalidate();
+      setComment('');
+    },
+  });
+
+  function onSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    if (comment.length < 1) return;
+    commentMutation.mutate({
+      comment,
+      tweetId: props.tweetId,
+    });
+  }
 
   if (!session.data) return null;
 
@@ -139,17 +168,35 @@ function ReplySection() {
         alt={session.data.user.name!}
         className="mr-4"
       />
-      <div className="flex-1 flex items-center bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+      <form
+        onSubmit={onSubmit}
+        className="flex-1 flex items-center bg-gray-50 border border-gray-200 rounded-lg px-3 py-2"
+      >
         <input
           type="text"
           name="comment"
+          autoComplete="off"
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
           placeholder="Tweet your reply"
           className="flex-1 bg-transparent focus:outline-none"
         />
-        <button className="text-gray-400 hover:text-gray-600">
+        <button
+          type="button"
+          className="text-gray-400 hover:text-gray-600 mr-2"
+        >
           <ImageIcon />
         </button>
-      </div>
+        <button
+          type="submit"
+          className={
+            'text-gray-600 rounded p-1 disabled:text-gray-400 disabled:cursor-not-allowed'
+          }
+          disabled={comment.length < 1}
+        >
+          <SendHorizonalIcon size={20} />
+        </button>
+      </form>
     </div>
   );
 }

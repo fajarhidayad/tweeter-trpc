@@ -14,20 +14,23 @@ datasource db {
 }
 
 model User {
-  id            String     @id @default(cuid())
+  id            String        @id @default(cuid())
   name          String?
-  username      String?    @unique
-  email         String?    @unique
-  bio           String?    @db.VarChar(255)
+  username      String?       @unique
+  email         String?       @unique
+  bio           String?       @db.VarChar(255)
   emailVerified DateTime?
   image         String?
   Session       Session[]
   Account       Account?
   tweets        Tweet[]
   likes         Like[]
-  followers     Follower[] @relation("Following")
-  following     Follower[] @relation("Followers")
+  likesComment  LikeComment[]
+  followers     Follower[]    @relation("Following")
+  following     Follower[]    @relation("Followers")
   bookmarks     Bookmark[]
+  comments      Comment[]
+  retweets      Retweet[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -86,6 +89,38 @@ model Tweet {
   author    User       @relation(fields: [authorId], references: [id])
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
+  comments  Comment[]
+  retweets  Retweet[]
+}
+
+model Retweet {
+  id        Int      @id @default(autoincrement())
+  tweetId   Int
+  userId    String
+  createdAt DateTime
+
+  tweet Tweet @relation(fields: [tweetId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  comment   String   @db.VarChar(255)
+  createdAt DateTime @default(now())
+  userId    String
+  tweetId   Int
+
+  user  User          @relation(fields: [userId], references: [id])
+  tweet Tweet         @relation(fields: [tweetId], references: [id])
+  like  LikeComment[]
+}
+
+model LikeComment {
+  id        Int     @id @default(autoincrement())
+  commentId Int
+  userId    String
+  comment   Comment @relation(fields: [commentId], references: [id])
+  user      User    @relation(fields: [userId], references: [id])
 }
 
 model Like {

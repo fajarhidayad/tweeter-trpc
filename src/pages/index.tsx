@@ -51,6 +51,7 @@ export default function Home({
                   authorImg={tweet.author.image!}
                   bookmarkCount={tweet._count.bookmarks}
                   likeCount={tweet._count.likes}
+                  commentCount={tweet._count.comments}
                   createdAt={tweet.createdAt}
                   // @ts-ignore
                   isBookmarked={tweet.bookmarks && tweet.bookmarks.length}

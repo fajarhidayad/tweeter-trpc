@@ -26,7 +26,7 @@ export default function Navbar() {
           <Image src={'/tweeter.svg'} alt="icon" width={125} height={50} />
         </Link>
 
-        <ul className="hidden lg:flex items-center space-x-14 pt-6">
+        <ul className="hidden lg:flex items-center space-x-10 pt-6">
           <NavLink href="/">Home</NavLink>
           <NavLink href="/explore">Explore</NavLink>
           {session.data && <NavLink href="/bookmark">Bookmarks</NavLink>}

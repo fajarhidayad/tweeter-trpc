@@ -6,7 +6,9 @@ export default function Main(props: {
   className?: string;
 }) {
   return (
-    <div className={twMerge('container max-w-6xl py-11', props.className)}>
+    <div
+      className={twMerge('container max-w-6xl py-5 lg:py-11', props.className)}
+    >
       {props.children}
     </div>
   );

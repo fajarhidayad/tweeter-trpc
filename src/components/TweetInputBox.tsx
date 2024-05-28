@@ -1,11 +1,13 @@
-import { EarthIcon, ImageIcon } from 'lucide-react';
+import { EarthIcon, ImageIcon, UsersIcon } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { FormEvent, useState } from 'react';
 import { trpc } from '~/utils/trpc';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 
 export default function TweetInputBox() {
   const [body, setBody] = useState('');
+  const [replyPublic, setReplyPublic] = useState(true);
   const session = useSession();
 
   const utils = trpc.useUtils();
@@ -52,10 +54,41 @@ export default function TweetInputBox() {
             <button>
               <ImageIcon className="text-blue-500" size={20} />
             </button>
-            <button className="text-blue-500 flex items-center font-medium text-xs space-x-1 ml-2">
-              <EarthIcon size={20} />
-              <p>Everyone can reply</p>
-            </button>
+            <Popover>
+              <PopoverTrigger className="text-blue-500 flex items-center font-medium text-xs space-x-1 ml-2">
+                {replyPublic ? (
+                  <>
+                    <EarthIcon size={20} />
+                    <p>Everyone can reply</p>
+                  </>
+                ) : (
+                  <>
+                    <UsersIcon size={20} />
+                    <p>People you follow</p>
+                  </>
+                )}
+              </PopoverTrigger>
+              <PopoverContent className="rounded-xl px-3 py-2 text-gray-700 w-[230px]">
+                <p className="font-semibold text-xs mb-1">Who can reply?</p>
+                <p className="text-xs text-gray-600 mb-1">
+                  Choose who can reply to this Tweet.
+                </p>
+                <button
+                  onClick={() => setReplyPublic(true)}
+                  className="font-medium text-xs flex items-center px-3 py-2 space-x-2 rounded-lg hover:bg-gray-100 w-full"
+                >
+                  <EarthIcon size={20} />
+                  <span>Everyone</span>
+                </button>
+                <button
+                  onClick={() => setReplyPublic(false)}
+                  className="font-medium text-xs flex items-center px-3 py-2 space-x-2 rounded-lg hover:bg-gray-100 w-full"
+                >
+                  <UsersIcon size={20} />
+                  <span>People you follow</span>
+                </button>
+              </PopoverContent>
+            </Popover>
             <button
               type="submit"
               disabled={body.length < 1 || tweetMutation.isPending}
