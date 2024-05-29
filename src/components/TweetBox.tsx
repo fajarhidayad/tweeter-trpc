@@ -53,67 +53,70 @@ export function TweetBox(props: {
   const date = formatDate(props.createdAt);
 
   return (
-    <li className="bg-white rounded-lg shadow p-5">
-      <div className="flex mb-3.5">
-        <div className="w-10 h-10 bg-blue-300 rounded-lg mr-4 overflow-hidden">
-          <Image
-            src={props.authorImg}
-            alt={props.authorName}
-            width={40}
-            height={40}
-          />
+    <li>
+      {/* <p className="flex items-center text-sm"><Repeat2Icon /> <span></span></p> */}
+      <div className="bg-white rounded-lg shadow p-5">
+        <div className="flex mb-3.5">
+          <div className="w-10 h-10 bg-blue-300 rounded-lg mr-4 overflow-hidden">
+            <Image
+              src={props.authorImg}
+              alt={props.authorName}
+              width={40}
+              height={40}
+            />
+          </div>
+          <div className="font-medium">
+            <Link href={`/${props.username}`} className="hover:underline">
+              {props.authorName}
+            </Link>
+            <p className="text-xs text-gray-400 mt-1">{date}</p>
+          </div>
         </div>
-        <div className="font-medium">
-          <Link href={`/${props.username}`} className="hover:underline">
-            {props.authorName}
-          </Link>
-          <p className="text-xs text-gray-400 mt-1">{date}</p>
+
+        <p className="text-gray-800 mb-4">{props.body}</p>
+
+        <div className="flex justify-end items-center space-x-4 mb-2">
+          <p className="text-xs text-gray-400">{props.likeCount} Likes</p>
+          <p className="text-xs text-gray-400">{props.commentCount} Comments</p>
+          <p className="text-xs text-gray-400">0 Retweets</p>
+          <p className="text-xs text-gray-400">
+            {props.bookmarkCount ?? 0} Saved
+          </p>
         </div>
+
+        <div className="grid grid-cols-4 border-y py-1 gap-x-5 mb-2">
+          <TweetBoxButton
+            label="Comment"
+            onClick={() => setShowComment((prev) => !prev)}
+          >
+            <MessageSquareIcon />
+          </TweetBoxButton>
+          <TweetBoxButton label="Retweet">
+            <Repeat2Icon />
+          </TweetBoxButton>
+          <TweetBoxButton
+            label={props.isLiked ? 'Liked' : 'Like'}
+            className={props.isLiked ? 'text-red-500' : ''}
+            onClick={() => likeTweet.mutate({ tweetId: props.id })}
+          >
+            <HeartIcon />
+          </TweetBoxButton>
+          <TweetBoxButton
+            label={props.isBookmarked ? 'Saved' : 'Save'}
+            className={props.isBookmarked ? 'text-yellow-400' : ''}
+            onClick={() => saveTweet.mutate({ tweetId: props.id })}
+          >
+            <BookmarkIcon />
+          </TweetBoxButton>
+        </div>
+
+        {showComment && (
+          <>
+            <ReplySection tweetId={props.id} />
+            <CommentSection tweetId={props.id} />
+          </>
+        )}
       </div>
-
-      <p className="text-gray-800 mb-4">{props.body}</p>
-
-      <div className="flex justify-end items-center space-x-4 mb-2">
-        <p className="text-xs text-gray-400">{props.likeCount} Likes</p>
-        <p className="text-xs text-gray-400">{props.commentCount} Comments</p>
-        <p className="text-xs text-gray-400">0 Retweets</p>
-        <p className="text-xs text-gray-400">
-          {props.bookmarkCount ?? 0} Saved
-        </p>
-      </div>
-
-      <div className="grid grid-cols-4 border-y py-1 gap-x-5 mb-2">
-        <TweetBoxButton
-          label="Comment"
-          onClick={() => setShowComment((prev) => !prev)}
-        >
-          <MessageSquareIcon />
-        </TweetBoxButton>
-        <TweetBoxButton label="Retweet">
-          <Repeat2Icon />
-        </TweetBoxButton>
-        <TweetBoxButton
-          label={props.isLiked ? 'Liked' : 'Like'}
-          className={props.isLiked ? 'text-red-500' : ''}
-          onClick={() => likeTweet.mutate({ tweetId: props.id })}
-        >
-          <HeartIcon />
-        </TweetBoxButton>
-        <TweetBoxButton
-          label={props.isBookmarked ? 'Saved' : 'Save'}
-          className={props.isBookmarked ? 'text-yellow-400' : ''}
-          onClick={() => saveTweet.mutate({ tweetId: props.id })}
-        >
-          <BookmarkIcon />
-        </TweetBoxButton>
-      </div>
-
-      {showComment && (
-        <>
-          <ReplySection tweetId={props.id} />
-          <CommentSection tweetId={props.id} />
-        </>
-      )}
     </li>
   );
 }

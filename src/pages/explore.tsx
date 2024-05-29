@@ -1,8 +1,7 @@
 import { SearchIcon } from 'lucide-react';
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
-import { Session } from 'next-auth';
 import Head from 'next/head';
-import React, { useState } from 'react';
+import { FormEvent, useCallback, useEffect, useState } from 'react';
 import {
   FilterTweetContainer,
   FilterTweetLink,
@@ -12,18 +11,42 @@ import Grid from '~/components/layouts/Grid';
 import Main from '~/components/layouts/Main';
 import StickyTopContainer from '~/components/layouts/StickyTopContainer';
 import { auth } from '~/server/auth';
-import { UserServerSessionProps } from '../../types/user-session';
 import { trpc } from '~/utils/trpc';
+import { UserServerSessionProps } from '../../types/user-session';
+import { useRouter } from 'next/router';
+import { TweetFilterSearch } from '~/server/client';
 
 export const getServerSideProps = (async ({ req, res }) => {
   const session = await auth({ req, res });
+  if (session && session.user.username === null) {
+    return {
+      redirect: {
+        destination: '/settings',
+        permanent: false,
+      },
+    };
+  }
   return { props: { user: session?.user ?? null } };
 }) satisfies GetServerSideProps<{ user: UserServerSessionProps }>;
 
 export default function ExplorePage({
   user,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const tweets = trpc.tweet.showAll.useQuery();
+  const [tweets, setTweets] = useState<TweetFilterSearch>([]);
+  const router = useRouter();
+  const { filter, search } = router.query;
+
+  const { data, isLoading } = trpc.tweet.search.useQuery({
+    search: (search as string) ?? '',
+  });
+
+  const onSearchTweet = useCallback(() => {
+    if (data) setTweets(data);
+  }, [data]);
+
+  useEffect(() => {
+    onSearchTweet();
+  }, [onSearchTweet]);
 
   return (
     <Main>
@@ -34,18 +57,38 @@ export default function ExplorePage({
       <Grid>
         <StickyTopContainer>
           <FilterTweetContainer>
-            <FilterTweetLink isActive={true}>Top</FilterTweetLink>
-            <FilterTweetLink>Latest</FilterTweetLink>
-            <FilterTweetLink>People</FilterTweetLink>
-            <FilterTweetLink>Media</FilterTweetLink>
+            <FilterTweetLink
+              isActive={filter === 'top' || filter === undefined}
+              href={{ query: { filter: 'top' } }}
+            >
+              Top
+            </FilterTweetLink>
+            <FilterTweetLink
+              isActive={filter === 'latest'}
+              href={{ query: { filter: 'latest' } }}
+            >
+              Latest
+            </FilterTweetLink>
+            <FilterTweetLink
+              isActive={filter === 'people'}
+              href={{ query: { filter: 'people' } }}
+            >
+              People
+            </FilterTweetLink>
+            <FilterTweetLink
+              isActive={filter === 'media'}
+              href={{ query: { filter: 'media' } }}
+            >
+              Media
+            </FilterTweetLink>
           </FilterTweetContainer>
         </StickyTopContainer>
 
         <section className="col-span-2">
-          <SearchTweetInput />
+          <SearchTweetInput onSubmitSearch={onSearchTweet} />
           <TweetContainer>
-            {tweets.data &&
-              tweets.data.map((tweet) => (
+            {tweets &&
+              tweets.map((tweet) => (
                 <TweetBox
                   key={tweet.id}
                   id={tweet.id}
@@ -63,6 +106,11 @@ export default function ExplorePage({
                   isLiked={tweet.likes && tweet.likes.length > 0 ? true : false}
                 />
               ))}
+            {!isLoading && tweets.length < 1 && (
+              <h2 className="text-2xl font-medium text-gray-700 text-center">
+                No tweets discovered
+              </h2>
+            )}
           </TweetContainer>
         </section>
       </Grid>
@@ -70,22 +118,42 @@ export default function ExplorePage({
   );
 }
 
-function SearchTweetInput() {
+function SearchTweetInput(props: { onSubmitSearch: () => void }) {
   const [search, setSearch] = useState('');
+  const router = useRouter();
+
+  function onSubmitForm(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (search.length < 1) return;
+    router.push({
+      query: {
+        search,
+      },
+    });
+    props.onSubmitSearch();
+  }
 
   return (
-    <div className="flex items-center bg-white rounded-lg shadow p-3 mb-4">
+    <form
+      onSubmit={onSubmitForm}
+      className="flex items-center bg-white rounded-lg shadow p-3 mb-4"
+    >
       <SearchIcon className="text-gray-400 mr-4" />
       <input
         name="search"
+        autoComplete="off"
         className="flex-1 focus:outline-none"
         placeholder="Search"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
-      <button className="bg-blue-500 text-white rounded px-8 py-2">
+      <button
+        type="submit"
+        disabled={!search}
+        className="bg-blue-500 disabled:bg-blue-400 text-white rounded px-8 py-2"
+      >
         Search
       </button>
-    </div>
+    </form>
   );
 }

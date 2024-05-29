@@ -5,3 +5,4 @@ type RouterInput = inferRouterInputs<AppRouter>;
 type RouterOutput = inferRouterOutputs<AppRouter>;
 
 export type TweetShowAllOutput = RouterOutput['tweet']['showAll'];
+export type TweetFilterSearch = RouterOutput['tweet']['search'];

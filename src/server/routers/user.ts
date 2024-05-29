@@ -12,7 +12,7 @@ export const profileSchema = z.object({
 export const userRouter = router({
   profile: procedure
     .input(z.object({ username: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const user = await prisma.user.findUnique({
         where: { username: input.username },
         select: {
@@ -27,6 +27,16 @@ export const userRouter = router({
               followers: true,
             },
           },
+          following: ctx.session
+            ? {
+                where: {
+                  followerId: ctx.session.user.id,
+                },
+                select: {
+                  id: true,
+                },
+              }
+            : false,
         },
       });
 

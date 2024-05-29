@@ -1,3 +1,4 @@
+import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import { useSession } from 'next-auth/react';
 import Head from 'next/head';
 import Image from 'next/image';
@@ -16,13 +17,37 @@ import StickyTopContainer from '~/components/layouts/StickyTopContainer';
 import { Dialog, DialogContent, DialogTrigger } from '~/components/ui/dialog';
 import { Separator } from '~/components/ui/separator';
 import { trpc } from '~/utils/trpc';
+import { UserServerSessionProps } from '../../types/user-session';
+import { auth } from '~/server/auth';
 
-export default function UserPage() {
+export const getServerSideProps = (async ({ req, res }) => {
+  const session = await auth({ req, res });
+  if (session && session.user.username === null) {
+    return {
+      redirect: {
+        destination: '/settings',
+        permanent: false,
+      },
+    };
+  }
+  return { props: { userAuth: session?.user ?? null } };
+}) satisfies GetServerSideProps<{ userAuth: UserServerSessionProps }>;
+
+export default function UserPage({
+  userAuth,
+}: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const session = useSession();
   const router = useRouter();
   const username = router.query.username as string;
-  const { data: user, isLoading } = trpc.user.profile.useQuery({ username });
+  const { data: userProfile, isLoading } = trpc.user.profile.useQuery({
+    username,
+  });
   const userTweets = trpc.tweet.userTweets.useQuery({ username });
+  const isAuthFollowing = userProfile?.following
+    ? userProfile.following.length > 0
+    : false;
+
+  const { filter } = router.query;
 
   if (isLoading) return;
 
@@ -30,31 +55,65 @@ export default function UserPage() {
     <>
       <Head>
         <title>
-          {user ? user.name : 'User Not Found'} (@{username}) | Tweeter
+          {userProfile ? userProfile.name : 'User Not Found'} (@{username}) |
+          Tweeter
         </title>
       </Head>
 
       <div className="bg-gray-300 w-full h-[168px] lg:h-[300px]"></div>
 
-      <Main className="-translate-y-7 lg:-translate-y-16 pt-0">
+      <Main className="-translate-y-7 lg:-translate-y-20 pt-0">
         <Grid className="gap-y-5">
           <UserDescriptionContainer
-            name={user?.name}
-            bio={user?.bio}
-            userImg={user?.image}
-            userId={user?.id!}
-            isUserSession={session.data?.user.id === user?.id}
-            followersCount={user?._count.followers!}
-            followingCount={user?._count.following!}
+            name={userProfile?.name}
+            bio={userProfile?.bio}
+            userImg={userProfile?.image}
+            userId={userProfile?.id!}
+            isUserSession={session.data?.user.id === userProfile?.id}
+            followersCount={userProfile?._count.followers!}
+            followingCount={userProfile?._count.following!}
+            isAuthFollowing={isAuthFollowing}
           />
 
-          {user && (
+          {userProfile && (
             <StickyTopContainer className="top-20 col-span-1">
               <FilterTweetContainer>
-                <FilterTweetLink isActive>Tweets</FilterTweetLink>
-                <FilterTweetLink>Tweets & replies</FilterTweetLink>
-                <FilterTweetLink>Media</FilterTweetLink>
-                <FilterTweetLink>Likes</FilterTweetLink>
+                <FilterTweetLink
+                  isActive={filter === 'tweets' || filter === undefined}
+                  href={{
+                    query: { filter: 'tweets', username },
+                    pathname: '/[username]',
+                  }}
+                >
+                  Tweets
+                </FilterTweetLink>
+                <FilterTweetLink
+                  isActive={filter === 'replies'}
+                  href={{
+                    query: { filter: 'replies', username },
+                    pathname: '/[username]',
+                  }}
+                >
+                  Tweets & replies
+                </FilterTweetLink>
+                <FilterTweetLink
+                  isActive={filter === 'media'}
+                  href={{
+                    query: { filter: 'media', username },
+                    pathname: '/[username]',
+                  }}
+                >
+                  Media
+                </FilterTweetLink>
+                <FilterTweetLink
+                  isActive={filter === 'likes'}
+                  href={{
+                    query: { filter: 'likes', username },
+                    pathname: '/[username]',
+                  }}
+                >
+                  Likes
+                </FilterTweetLink>
               </FilterTweetContainer>
             </StickyTopContainer>
           )}
@@ -95,6 +154,7 @@ function UserDescriptionContainer(props: {
   isUserSession: boolean;
   followersCount: number;
   followingCount: number;
+  isAuthFollowing: boolean;
 }) {
   const utils = trpc.useUtils();
   const followMutation = trpc.user.follow.useMutation({
@@ -146,13 +206,19 @@ function UserDescriptionContainer(props: {
                   <span className="text-gray-600 font-medium">Followers</span>
                 </p>
               </div>
-              {!props.isUserSession && props.userId && (
+              {!props.isUserSession &&
+              props.userId &&
+              !props.isAuthFollowing ? (
                 <FollowButton
                   onClick={() =>
                     followMutation.mutate({ userId: props.userId })
                   }
                   className="hidden md:flex px-6 py-2"
                 />
+              ) : (
+                <button className="bg-white border border-blue-500 text-blue-500 hidden md:flex text-xs font-medium ml-auto rounded py-1 px-3 space-x-1">
+                  Unfollow
+                </button>
               )}
             </div>
           </div>
@@ -160,11 +226,15 @@ function UserDescriptionContainer(props: {
           <p className="text-center md:text-start text-gray-500 max-w-[420px]">
             {props.bio ? props.bio : 'No bio'}
           </p>
-          {props.isUserSession && props.userId && (
+          {props.isUserSession && props.userId && !props.isAuthFollowing ? (
             <FollowButton
               onClick={() => followMutation.mutate({ userId: props.userId })}
               className="flex md:hidden px-6 py-2 mx-auto mt-5"
             />
+          ) : (
+            <button className="bg-white border border-blue-500 text-blue-500 flex md:hidden text-xs font-medium mt-3 mx-auto rounded py-1 px-3 space-x-1">
+              Unfollow
+            </button>
           )}
         </div>
       </div>

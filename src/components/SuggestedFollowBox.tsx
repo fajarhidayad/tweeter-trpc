@@ -19,7 +19,7 @@ export default function SuggestedFollowBox() {
         {user && !isLoading ? (
           <SuggestedFollowItem
             name={user.name!}
-            followersCount={208}
+            followersCount={user._count.following}
             username={user.username!}
             image={user.image!}
           />

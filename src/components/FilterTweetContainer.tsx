@@ -1,4 +1,6 @@
 import classNames from 'classnames';
+import { Url } from 'next/dist/shared/lib/router/router';
+import Link from 'next/link';
 import React, { ReactNode } from 'react';
 
 export function FilterTweetContainer(props: { children: ReactNode }) {
@@ -8,6 +10,7 @@ export function FilterTweetContainer(props: { children: ReactNode }) {
 export function FilterTweetLink(props: {
   children: ReactNode;
   isActive?: boolean;
+  href: Url;
 }) {
   return (
     <li className="flex items-center space-x-4 mb-4 last:mb-0">
@@ -18,7 +21,8 @@ export function FilterTweetLink(props: {
           'bg-blue-500': props.isActive,
         })}
       />
-      <p
+      <Link
+        href={props.href}
         className={classNames({
           'font-semibold text-sm hover:text-blue-500': true,
           'text-gray-700': !props.isActive,
@@ -26,7 +30,7 @@ export function FilterTweetLink(props: {
         })}
       >
         {props.children}
-      </p>
+      </Link>
     </li>
   );
 }

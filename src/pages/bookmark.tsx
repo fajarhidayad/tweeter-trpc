@@ -13,6 +13,7 @@ import { UserServerSessionProps } from '../../types/user-session';
 import { auth } from '~/server/auth';
 import { trpc } from '~/utils/trpc';
 import Loading from '~/components/Loading';
+import { useRouter } from 'next/router';
 
 export const getServerSideProps = (async ({ req, res }) => {
   const session = await auth({ req, res });
@@ -31,6 +32,8 @@ export default function BookmarkPage({
   user,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const bookmarks = trpc.tweet.showUserBookmarks.useQuery();
+  const router = useRouter();
+  const { filter } = router.query;
 
   return (
     <Main>
@@ -41,10 +44,38 @@ export default function BookmarkPage({
       <Grid>
         <StickyTopContainer>
           <FilterTweetContainer>
-            <FilterTweetLink isActive>Tweets</FilterTweetLink>
-            <FilterTweetLink>Tweets & replies</FilterTweetLink>
-            <FilterTweetLink>Media</FilterTweetLink>
-            <FilterTweetLink>Likes</FilterTweetLink>
+            <FilterTweetLink
+              isActive={filter === 'tweets' || filter === undefined}
+              href={{
+                query: { filter: 'tweets' },
+              }}
+            >
+              Tweets
+            </FilterTweetLink>
+            <FilterTweetLink
+              isActive={filter === 'replies'}
+              href={{
+                query: { filter: 'replies' },
+              }}
+            >
+              Tweets & replies
+            </FilterTweetLink>
+            <FilterTweetLink
+              isActive={filter === 'media'}
+              href={{
+                query: { filter: 'media' },
+              }}
+            >
+              Media
+            </FilterTweetLink>
+            <FilterTweetLink
+              isActive={filter === 'likes'}
+              href={{
+                query: { filter: 'likes' },
+              }}
+            >
+              Likes
+            </FilterTweetLink>
           </FilterTweetContainer>
         </StickyTopContainer>
 
@@ -54,11 +85,11 @@ export default function BookmarkPage({
               {bookmarks.data.map((bookmark) => (
                 <TweetBox
                   key={bookmark.id}
-                  id={bookmark.id}
+                  id={bookmark.tweetId}
                   body={bookmark.tweet.body}
-                  username={bookmark.user.username!}
-                  authorImg={bookmark.user.image!}
-                  authorName={bookmark.user.name!}
+                  username={bookmark.tweet.author.username!}
+                  authorImg={bookmark.tweet.author.image!}
+                  authorName={bookmark.tweet.author.name!}
                   bookmarkCount={bookmark.tweet._count.bookmarks}
                   likeCount={bookmark.tweet._count.likes}
                   commentCount={bookmark.tweet._count.comments}
