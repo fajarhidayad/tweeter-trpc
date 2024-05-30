@@ -49,6 +49,11 @@ export function TweetBox(props: {
       utils.tweet.userTweets.invalidate();
     },
   });
+  const retweet = trpc.tweet.retweet.useMutation({
+    onSuccess() {
+      utils.tweet.invalidate();
+    },
+  });
 
   const date = formatDate(props.createdAt);
 
@@ -91,7 +96,10 @@ export function TweetBox(props: {
           >
             <MessageSquareIcon />
           </TweetBoxButton>
-          <TweetBoxButton label="Retweet">
+          <TweetBoxButton
+            label="Retweet"
+            onClick={() => retweet.mutate({ tweetId: props.id })}
+          >
             <Repeat2Icon />
           </TweetBoxButton>
           <TweetBoxButton

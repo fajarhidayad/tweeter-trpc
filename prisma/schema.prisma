@@ -81,16 +81,17 @@ model VerificationToken {
 }
 
 model Tweet {
-  id        Int        @id @default(autoincrement())
-  body      String     @db.VarChar(255)
-  authorId  String
-  likes     Like[]
-  bookmarks Bookmark[]
-  author    User       @relation(fields: [authorId], references: [id])
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  comments  Comment[]
-  retweets  Retweet[]
+  id         Int        @id @default(autoincrement())
+  body       String     @db.VarChar(255)
+  authorId   String
+  likes      Like[]
+  bookmarks  Bookmark[]
+  author     User       @relation(fields: [authorId], references: [id])
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  comments   Comment[]
+  retweets   Retweet[]
+  visibility Visibility @default(PUBLIC)
 }
 
 model Retweet {
@@ -154,4 +155,9 @@ model Bookmark {
   tweet     Tweet    @relation(fields: [tweetId], references: [id])
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
+}
+
+enum Visibility {
+  PUBLIC
+  FOLLOWERS_ONLY
 }

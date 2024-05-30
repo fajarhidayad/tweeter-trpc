@@ -75,6 +75,11 @@ export const userRouter = router({
   follow: authProcedure
     .input(z.object({ userId: z.string() }))
     .mutation(async ({ ctx, input }) => {
+      if (ctx.user.id === input.userId)
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Cannot follow yourself',
+        });
       const checkFollow = await prisma.follower.findFirst({
         where: {
           followerId: ctx.user.id,
@@ -99,7 +104,7 @@ export const userRouter = router({
     }),
   showFollowing: procedure
     .input(z.object({ userId: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const user = await prisma.user.findUnique({
         where: { id: input.userId },
         select: {
@@ -122,6 +127,16 @@ export const userRouter = router({
               name: true,
               _count: true,
               username: true,
+              following: ctx.session
+                ? {
+                    where: {
+                      followerId: ctx.session.user.id,
+                    },
+                    select: {
+                      followerId: true,
+                    },
+                  }
+                : false,
             },
           },
         },

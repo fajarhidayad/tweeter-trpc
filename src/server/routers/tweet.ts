@@ -3,6 +3,7 @@ import { prisma } from '../prisma';
 import { authProcedure, procedure, router } from '../trpc';
 import { TRPCError } from '@trpc/server';
 import { Session } from 'next-auth';
+import { Visibility } from '@prisma/client';
 
 const LIMIT_DATA = 10;
 
@@ -11,6 +12,13 @@ async function getAllTweet(ctx: { session: Session | null }) {
     take: LIMIT_DATA,
     orderBy: {
       createdAt: 'desc',
+    },
+    where: {
+      OR: [
+        {
+          visibility: 'PUBLIC',
+        },
+      ],
     },
     include: {
       _count: true,
@@ -48,6 +56,7 @@ export const tweetRouter = router({
     .input(
       z.object({
         body: z.string().min(1).max(255),
+        visibility: z.nativeEnum(Visibility),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -55,6 +64,7 @@ export const tweetRouter = router({
         data: {
           body: input.body,
           authorId: ctx.user.id,
+          visibility: input.visibility,
         },
       });
 
@@ -109,8 +119,13 @@ export const tweetRouter = router({
   like: authProcedure
     .input(z.object({ tweetId: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      const checkLiked = await prisma.like.findFirst({
-        where: { tweetId: input.tweetId, userId: ctx.user.id },
+      const checkLiked = await prisma.like.findUnique({
+        where: {
+          userId_tweetId: {
+            userId: ctx.user.id,
+            tweetId: input.tweetId,
+          },
+        },
       });
 
       if (checkLiked) {
@@ -176,6 +191,30 @@ export const tweetRouter = router({
       z.object({ comment: z.string().min(1).max(255), tweetId: z.number() })
     )
     .mutation(async ({ ctx, input }) => {
+      const tweet = await prisma.tweet.findUnique({
+        where: { id: input.tweetId },
+      });
+
+      if (!tweet)
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Tweet not found' });
+
+      if (tweet.visibility === 'FOLLOWERS_ONLY') {
+        const isUserFollower = await prisma.follower.findUnique({
+          where: {
+            followerId_followingId: {
+              followerId: ctx.user.id,
+              followingId: tweet.authorId,
+            },
+          },
+        });
+
+        if (!isUserFollower && ctx.user.id !== tweet.authorId)
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Tweet is private only follower',
+          });
+      }
+
       const newComment = await prisma.comment.create({
         data: {
           comment: input.comment,

@@ -4,10 +4,13 @@ import Image from 'next/image';
 import { FormEvent, useState } from 'react';
 import { trpc } from '~/utils/trpc';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { Visibility } from '@prisma/client';
 
 export default function TweetInputBox() {
   const [body, setBody] = useState('');
-  const [replyPublic, setReplyPublic] = useState(true);
+  const [tweetVisibility, setTweetVisibilty] = useState<Visibility>(
+    Visibility.PUBLIC
+  );
   const session = useSession();
 
   const utils = trpc.useUtils();
@@ -23,6 +26,7 @@ export default function TweetInputBox() {
     if (body.length < 1) return;
     tweetMutation.mutate({
       body,
+      visibility: tweetVisibility,
     });
   }
 
@@ -56,7 +60,7 @@ export default function TweetInputBox() {
             </button>
             <Popover>
               <PopoverTrigger className="text-blue-500 flex items-center font-medium text-xs space-x-1 ml-2">
-                {replyPublic ? (
+                {tweetVisibility === Visibility.PUBLIC ? (
                   <>
                     <EarthIcon size={20} />
                     <p>Everyone can reply</p>
@@ -74,14 +78,14 @@ export default function TweetInputBox() {
                   Choose who can reply to this Tweet.
                 </p>
                 <button
-                  onClick={() => setReplyPublic(true)}
+                  onClick={() => setTweetVisibilty(Visibility.PUBLIC)}
                   className="font-medium text-xs flex items-center px-3 py-2 space-x-2 rounded-lg hover:bg-gray-100 w-full"
                 >
                   <EarthIcon size={20} />
                   <span>Everyone</span>
                 </button>
                 <button
-                  onClick={() => setReplyPublic(false)}
+                  onClick={() => setTweetVisibilty(Visibility.FOLLOWERS_ONLY)}
                   className="font-medium text-xs flex items-center px-3 py-2 space-x-2 rounded-lg hover:bg-gray-100 w-full"
                 >
                   <UsersIcon size={20} />

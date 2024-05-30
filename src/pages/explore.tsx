@@ -106,7 +106,7 @@ export default function ExplorePage({
                   isLiked={tweet.likes && tweet.likes.length > 0 ? true : false}
                 />
               ))}
-            {!isLoading && tweets.length < 1 && (
+            {!isLoading && data && data.length < 1 && (
               <h2 className="text-2xl font-medium text-gray-700 text-center">
                 No tweets discovered
               </h2>
