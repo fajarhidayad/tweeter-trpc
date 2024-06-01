@@ -7,8 +7,67 @@ import { Visibility } from '@prisma/client';
 
 const LIMIT_DATA = 10;
 
+const tweetIncludeFilter = (ctx: { session: Session | null }) => ({
+  _count: true,
+  author: true,
+  bookmarks: ctx.session
+    ? {
+        select: {
+          userId: true,
+        },
+        where: {
+          userId: ctx.session.user.id,
+        },
+      }
+    : false,
+  likes: ctx.session
+    ? {
+        select: {
+          userId: true,
+        },
+        where: {
+          userId: ctx.session.user.id,
+        },
+      }
+    : false,
+});
+
 async function getAllTweet(ctx: { session: Session | null }) {
-  return prisma.tweet.findMany({
+  const followingId = ctx.session
+    ? await prisma.follower
+        .findMany({
+          where: { followerId: ctx.session?.user.id },
+          select: { followingId: true },
+        })
+        .then((followers) => followers.map((f) => f.followingId))
+    : [];
+
+  const retweets = ctx.session
+    ? await prisma.retweet.findMany({
+        take: LIMIT_DATA,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        where: {
+          OR: [
+            { userId: { in: followingId } },
+            ctx.session ? { userId: ctx.session.user.id } : {},
+          ],
+        },
+        include: {
+          tweet: {
+            include: tweetIncludeFilter(ctx),
+          },
+          user: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      })
+    : [];
+
+  const tweets = await prisma.tweet.findMany({
     take: LIMIT_DATA,
     orderBy: {
       createdAt: 'desc',
@@ -18,33 +77,44 @@ async function getAllTweet(ctx: { session: Session | null }) {
         {
           visibility: 'PUBLIC',
         },
+        ctx.session
+          ? {
+              AND: [
+                { visibility: 'FOLLOWERS_ONLY' },
+                { authorId: { in: followingId } },
+              ],
+            }
+          : {},
+        ctx.session
+          ? {
+              AND: [
+                { visibility: 'FOLLOWERS_ONLY' },
+                { authorId: ctx.session?.user.id },
+              ],
+            }
+          : {},
       ],
     },
-    include: {
-      _count: true,
-      author: true,
-      bookmarks: ctx.session
-        ? {
-            select: {
-              userId: true,
-            },
-            where: {
-              userId: ctx.session.user.id,
-            },
-          }
-        : false,
-      likes: ctx.session
-        ? {
-            select: {
-              userId: true,
-            },
-            where: {
-              userId: ctx.session.user.id,
-            },
-          }
-        : false,
-    },
+    include: tweetIncludeFilter(ctx),
   });
+
+  const feed = [
+    ...tweets.map((tweet) => ({ ...tweet, type: 'TWEET' })),
+    ...retweets.map((retweet) => ({
+      ...retweet.tweet,
+      retweetedBy: retweet.user.name,
+      createdAtRetweet: retweet.createdAt,
+      type: 'RETWEET',
+    })),
+  ].sort(
+    (a, b) =>
+      //@ts-ignore
+      (b.createdAtRetweet ? b.createdAtRetweet : b.createdAt.getTime()) -
+      //@ts-ignore
+      (a.createdAtRetweet ? a.createdAtRetweet : a.createdAt.getTime())
+  );
+
+  return feed;
 }
 
 export const tweetRouter = router({
@@ -80,9 +150,39 @@ export const tweetRouter = router({
       if (!user)
         throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
 
+      const followingId = ctx.session
+        ? await prisma.follower
+            .findMany({
+              where: { followerId: ctx.session?.user.id },
+              select: { followingId: true },
+            })
+            .then((followers) => followers.map((f) => f.followingId))
+        : [];
+
       const tweets = await prisma.tweet.findMany({
         where: {
           authorId: user.id,
+          OR: [
+            {
+              visibility: 'PUBLIC',
+            },
+            ctx.session
+              ? {
+                  AND: [
+                    { visibility: 'FOLLOWERS_ONLY' },
+                    { authorId: { in: followingId } },
+                  ],
+                }
+              : {},
+            ctx.session
+              ? {
+                  AND: [
+                    { visibility: 'FOLLOWERS_ONLY' },
+                    { authorId: ctx.session?.user.id },
+                  ],
+                }
+              : {},
+          ],
         },
         include: {
           _count: true,

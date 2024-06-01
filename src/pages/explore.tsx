@@ -100,6 +100,7 @@ export default function ExplorePage({
                   bookmarkCount={tweet._count.bookmarks}
                   likeCount={tweet._count.likes}
                   commentCount={tweet._count.comments}
+                  retweetCount={tweet._count.retweets}
                   isBookmarked={
                     tweet.bookmarks && tweet.bookmarks.length > 0 ? true : false
                   }

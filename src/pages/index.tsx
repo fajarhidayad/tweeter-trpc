@@ -51,8 +51,12 @@ export default function Home({
                   authorImg={tweet.author.image!}
                   bookmarkCount={tweet._count.bookmarks}
                   likeCount={tweet._count.likes}
+                  retweetCount={tweet._count.retweets}
                   commentCount={tweet._count.comments}
                   createdAt={tweet.createdAt}
+                  type={tweet.type}
+                  // @ts-ignore
+                  retweetedBy={tweet.retweetedBy ? tweet.retweetedBy : null}
                   isBookmarked={
                     tweet.bookmarks && tweet.bookmarks.length > 0 ? true : false
                   }

@@ -28,9 +28,12 @@ export function TweetBox(props: {
   bookmarkCount: number;
   likeCount: number;
   commentCount: number;
+  retweetCount: number;
   username: string;
   createdAt: string;
+  retweetedBy?: string;
   isBookmarked?: boolean;
+  type: string;
   isLiked?: boolean;
 }) {
   const [showComment, setShowComment] = useState(false);
@@ -59,7 +62,11 @@ export function TweetBox(props: {
 
   return (
     <li>
-      {/* <p className="flex items-center text-sm"><Repeat2Icon /> <span></span></p> */}
+      {props.type === 'RETWEET' && (
+        <p className="flex items-center text-sm text-gray-500 mb-1 space-x-2">
+          <Repeat2Icon size={20} /> <span>{props.retweetedBy} Retweeted</span>
+        </p>
+      )}
       <div className="bg-white rounded-lg shadow p-5">
         <div className="flex mb-3.5">
           <div className="w-10 h-10 bg-blue-300 rounded-lg mr-4 overflow-hidden">
@@ -83,7 +90,7 @@ export function TweetBox(props: {
         <div className="flex justify-end items-center space-x-4 mb-2">
           <p className="text-xs text-gray-400">{props.likeCount} Likes</p>
           <p className="text-xs text-gray-400">{props.commentCount} Comments</p>
-          <p className="text-xs text-gray-400">0 Retweets</p>
+          <p className="text-xs text-gray-400">{props.retweetCount} Retweets</p>
           <p className="text-xs text-gray-400">
             {props.bookmarkCount ?? 0} Saved
           </p>

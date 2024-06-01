@@ -93,6 +93,7 @@ export default function BookmarkPage({
                   bookmarkCount={bookmark.tweet._count.bookmarks}
                   likeCount={bookmark.tweet._count.likes}
                   commentCount={bookmark.tweet._count.comments}
+                  retweetCount={bookmark.tweet._count.retweets}
                   createdAt={bookmark.tweet.createdAt}
                   isLiked={
                     bookmark.tweet.likes && bookmark.tweet.likes.length > 0
