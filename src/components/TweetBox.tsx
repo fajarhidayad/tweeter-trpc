@@ -15,12 +15,19 @@ import { formatDate } from '~/utils/format-date';
 import { trpc } from '~/utils/trpc';
 import Avatar from './Avatar';
 import CommentSection from './CommentSection';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from './ui/dialog';
 
 export function TweetContainer(props: { children: ReactNode }) {
   return <ul className="space-y-4">{props.children}</ul>;
 }
 
-export function TweetBox(props: {
+interface TweetBoxProps {
   id: number;
   body: string;
   authorName: string;
@@ -35,8 +42,9 @@ export function TweetBox(props: {
   isBookmarked?: boolean;
   type: string;
   isLiked?: boolean;
-}) {
-  const [showComment, setShowComment] = useState(false);
+}
+
+export function TweetBox(props: TweetBoxProps) {
   const utils = trpc.useUtils();
   const saveTweet = trpc.tweet.bookmark.useMutation({
     onSuccess() {
@@ -97,12 +105,20 @@ export function TweetBox(props: {
         </div>
 
         <div className="grid grid-cols-4 border-y py-1 gap-x-5 mb-2">
-          <TweetBoxButton
-            label="Comment"
-            onClick={() => setShowComment((prev) => !prev)}
-          >
-            <MessageSquareIcon />
-          </TweetBoxButton>
+          <Dialog>
+            <DialogTrigger asChild>
+              <TweetBoxButton label="Comment">
+                <MessageSquareIcon />
+              </TweetBoxButton>
+            </DialogTrigger>
+            <DialogContent className="h-[650px] flex flex-col">
+              <DialogHeader className="h-fit">
+                <DialogTitle>Comments</DialogTitle>
+              </DialogHeader>
+              <CommentSection tweetId={props.id} />
+              <ReplySection tweetId={props.id} className="mt-auto" />
+            </DialogContent>
+          </Dialog>
           <TweetBoxButton
             label="Retweet"
             onClick={() => retweet.mutate({ tweetId: props.id })}
@@ -124,13 +140,6 @@ export function TweetBox(props: {
             <BookmarkIcon />
           </TweetBoxButton>
         </div>
-
-        {showComment && (
-          <>
-            <ReplySection tweetId={props.id} />
-            <CommentSection tweetId={props.id} />
-          </>
-        )}
       </div>
     </li>
   );
@@ -156,7 +165,7 @@ function TweetBoxButton(props: {
   );
 }
 
-function ReplySection(props: { tweetId: number }) {
+function ReplySection(props: { tweetId: number; className?: string }) {
   const [comment, setComment] = useState('');
   const session = useSession();
   const utils = trpc.useUtils();
@@ -180,7 +189,7 @@ function ReplySection(props: { tweetId: number }) {
   if (!session.data) return null;
 
   return (
-    <div className="flex">
+    <div className={twMerge('flex w-full bg-white', props.className)}>
       <Avatar
         image={session.data.user.image!}
         alt={session.data.user.name!}

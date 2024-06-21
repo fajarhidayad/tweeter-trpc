@@ -24,7 +24,12 @@ export default function CommentSection(props: { tweetId: number }) {
     );
 
   return (
-    <ul className="pt-5 space-y-4">
+    <ul className="pt-5 space-y-4 overflow-y-auto flex-1">
+      {comments.data && comments.data.length < 1 && (
+        <p className="text-center font-semibold text-gray-500">
+          No comments yet
+        </p>
+      )}
       {comments.data &&
         comments.data.map((comment) => (
           <li className="flex" key={comment.id}>
